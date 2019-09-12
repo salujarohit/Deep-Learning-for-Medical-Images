@@ -92,7 +92,7 @@ def model_vgg16(hyperparameters):
     if hyperparameters['batch_norm']:
         model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(Conv2D(hyperparameters['base'], (3, 3), input_shape=hyperparameters['input_shape'], padding='same'))
+    model.add(Conv2D(hyperparameters['base'], (3, 3), padding='same'))
     if hyperparameters['batch_norm']:
         model.add(BatchNormalization())
     model.add(Activation('relu'))
