@@ -16,6 +16,12 @@ def hyperparameters_processing(hyperparameters):
 
 def get_hyperparameters(task):
     task_dict = {
+        'test': {'lr': .0001, 'batch_size': 8, 'epochs': 5, 'batch_norm': False, 'dropout': [],
+               'spatial_dropout': [], 'optimizer': 'Adam', 'loss': 'binary_crossentropy', 'model': 'alexnet',
+               'base': 8, 'input_shape': (128, 128, 1), 'data_path': 'Data/Skin/', 'pattern': ['Mel', 'Nev']},
+        'test1': {'lr': .0001, 'batch_size': 8, 'epochs': 2, 'batch_norm': False, 'dropout': [],
+                 'spatial_dropout': [], 'optimizer': 'Adam', 'loss': 'binary_crossentropy', 'model': 'alexnet',
+                 'base': 8, 'input_shape': (128, 128, 1), 'data_path': 'Data/Skin/', 'pattern': ['Mel', 'Nev']},
         '1a': {'lr': .0001, 'batch_size': 8, 'epochs': 50, 'batch_norm': False, 'dropout': [],
                    'spatial_dropout': [], 'optimizer': 'Adam', 'loss': 'binary_crossentropy', 'model': 'alexnet',
                    'base': 8, 'input_shape': (128, 128, 1), 'data_path': 'Data/Skin/', 'pattern': ['Mel', 'Nev']},

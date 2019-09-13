@@ -1,14 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 try:
     from tensorflow.keras.models import Sequential
     from tensorflow.keras.layers import Flatten, Conv2D, MaxPooling2D, Activation, Dropout, Dense, BatchNormalization, SpatialDropout2D
     from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 except:
     import tensorflow as tf
-    from tensorflow_core.python.keras.models import Sequential
-    from tensorflow_core.python.keras.layers.core import Flatten, Conv2D, MaxPooling2D, Activation, Dropout, Dense, BatchNormalization, SpatialDropout2D
-    from tensorflow_core.python.keras.optimizers import Adam, SGD, RMSprop
+    from tensorflow.python.keras.models import Sequential
+    from tensorflow.python.keras.layers.core import Flatten, Conv2D, MaxPooling2D, Activation, Dropout, Dense, BatchNormalization, SpatialDropout2D
+    from tensorflow.python.keras.optimizers import Adam, SGD, RMSprop
 
 # LeNet Model
 def model_LeNet(hyperparameters):
@@ -182,8 +183,8 @@ def get_model(hyperparameters):
     elif hyperparameters['model'] == "vgg16":
         return model_vgg16(hyperparameters)
 
-def plot_history(History):
-    plt.figure(figsize=(4, 4))
+def plot_history(History, task_number):
+    fig = plt.figure(figsize=(4, 4))
     plt.title("Learning curve")
     plt.plot(History.history["loss"], label="loss")
     plt.plot(History.history["val_loss"], label="val_loss")
@@ -193,4 +194,28 @@ def plot_history(History):
 
     plt.xlabel("Epochs")
     plt.ylabel("Loss Value")
-    plt.legend();
+    plt.legend()
+    result_path = os.path.join(os.path.join(os.getcwd(), 'results'), str(task_number)+'_loss.png')
+    fig.savefig(result_path, dpi=fig.dpi)
+
+    accuracy = ''
+    val_accuracy = ''
+    for key in History.history:
+        if "val" not in key and "accuracy" in key:
+            accuracy = key
+        if "val" in key and "accuracy" in key:
+            val_accuracy = key
+    if accuracy != '' and val_accuracy != '':
+        fig = plt.figure(figsize=(4, 4))
+        plt.title("Accuracy curve")
+        plt.plot(History.history[accuracy], label="accuracy")
+        plt.plot(History.history[val_accuracy], label="val_accuracy")
+        plt.plot(np.argmax(History.history[val_accuracy]),
+                 np.max(History.history[val_accuracy]),
+                 marker="x", color="r", label="best model")
+
+        plt.xlabel("Epochs")
+        plt.ylabel("Accuracy Value")
+        plt.legend()
+        result_path = os.path.join(os.path.join(os.getcwd(), 'results'), str(task_number) + '_accuracy.png')
+        fig.savefig(result_path, dpi=fig.dpi)
