@@ -1,4 +1,4 @@
 # Deep-Learning-for-Medical-Images
 
-### Rohit Saluja 
-### Mohamed Ahmed 
+### Rohit Saluja (salujarohit)
+### Mohamed Ahmed (Khalifa21)
