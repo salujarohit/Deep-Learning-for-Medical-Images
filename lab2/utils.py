@@ -1,7 +1,7 @@
 try:
     from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 except:
-    from tensorflow_core.python.keras.optimizers import Adam, SGD, RMSprop
+    from tensorflow.python.keras.optimizers import Adam, SGD, RMSprop
 
 def hyperparameters_processing(hyperparameters):
 
@@ -18,10 +18,14 @@ def get_hyperparameters(task):
     task_dict = {
         'test': {'lr': .0001, 'batch_size': 8, 'epochs': 5, 'batch_norm': False, 'dropout': [],
                'spatial_dropout': [], 'optimizer': 'Adam', 'loss': 'binary_crossentropy', 'model': 'alexnet',
-               'base': 8, 'input_shape': (128, 128, 1), 'data_path': 'Data/Skin/', 'pattern': ['Mel', 'Nev']},
+               'base': 8, 'input_shape': (128, 128, 1), 'data_path': 'Data/Skin/', 'pattern': ['Mel', 'Nev'],
+                'use_gen': False},
         'test1': {'lr': .0001, 'batch_size': 8, 'epochs': 2, 'batch_norm': False, 'dropout': [],
                  'spatial_dropout': [], 'optimizer': 'Adam', 'loss': 'binary_crossentropy', 'model': 'alexnet',
-                 'base': 8, 'input_shape': (128, 128, 1), 'data_path': 'Data/Skin/', 'pattern': ['Mel', 'Nev']},
+                 'base': 8, 'input_shape': (128, 128, 1), 'data_path': 'Data/Skin/', 'pattern': ['Mel', 'Nev'],
+                 'use_gen': True,
+                 'gen':{'rescale':1./255,'rotation_range':45,'width_shift_range':.15,'height_shift_range':.15,'horizontal_flip':True,'zoom_range':0.5},
+                 'gen_test':{'rescale':1./255,'rotation_range':0,'width_shift_range':0,'height_shift_range':0,'horizontal_flip':False,'zoom_range':0}},
         '1a': {'lr': .0001, 'batch_size': 8, 'epochs': 50, 'batch_norm': False, 'dropout': [],
                    'spatial_dropout': [], 'optimizer': 'Adam', 'loss': 'binary_crossentropy', 'model': 'alexnet',
                    'base': 8, 'input_shape': (128, 128, 1), 'data_path': 'Data/Skin/', 'pattern': ['Mel', 'Nev']},

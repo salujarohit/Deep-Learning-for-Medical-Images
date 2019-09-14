@@ -4,7 +4,7 @@ import os
 from random import shuffle
 from skimage.io import imread
 from skimage.transform import resize
-
+from tensorflow.python.keras.preprocessing.image import ImageDataGenerator, array_to_img
 
 # Data Loader
 # Assigning labels two images; those images contains pattern1 in their filenames
@@ -75,15 +75,56 @@ def get_train_test_data(train_data_path, test_data_path, train_list, test_list, 
     return Train_Img, Test_Img, Train_Label, Test_Label
 
 
-def get_data(data_path, img_w, img_h, pattern):
-    current_dir = os.getcwd()
-    print(current_dir)
-    train_data_path = os.path.join(os.path.join(current_dir, data_path), 'train')
-    test_data_path = os.path.join(os.path.join(current_dir, data_path), 'test')
-    print(train_data_path)
+def get_data(hyperparameters):
+    train_data_path = os.path.join(os.path.join(os.getcwd(), hyperparameters['data_path']), 'train')
+    test_data_path = os.path.join(os.path.join(os.getcwd(), hyperparameters['data_path']), 'test')
     train_list = os.listdir(train_data_path)
     test_list = os.listdir(test_data_path)
     x_train, x_test, y_train, y_test = get_train_test_data(
         train_data_path, test_data_path,
-        train_list, test_list, img_w, img_h, pattern)
+        train_list, test_list, hyperparameters['input_shape'][0], hyperparameters['input_shape'][1], hyperparameters['pattern'])
     return x_train, x_test, y_train, y_test
+
+
+def get_data_with_generator(hyperparameters):
+    train_data_path = os.path.join(os.path.join(os.getcwd(), hyperparameters['data_path']), 'train')
+    test_data_path = os.path.join(os.path.join(os.getcwd(), hyperparameters['data_path']), 'test')
+    train_list = os.listdir(train_data_path)
+    test_list = os.listdir(test_data_path)
+    image_gen_train = ImageDataGenerator(
+        rescale=hyperparameters['gen']['rescale'],
+        rotation_range=hyperparameters['gen']['rotation_range'],
+        width_shift_range=hyperparameters['gen']['width_shift_range'],
+        height_shift_range=hyperparameters['gen']['height_shift_range'],
+        horizontal_flip=hyperparameters['gen']['horizontal_flip'],
+        zoom_range=hyperparameters['gen']['zoom_range'],
+    )
+    image_gen_test = ImageDataGenerator(
+        rescale=hyperparameters['gen_test']['rescale'],
+        rotation_range=hyperparameters['gen_test']['rotation_range'],
+        width_shift_range=hyperparameters['gen_test']['width_shift_range'],
+        height_shift_range=hyperparameters['gen_test']['height_shift_range'],
+        horizontal_flip=hyperparameters['gen_test']['horizontal_flip'],
+        zoom_range=hyperparameters['gen_test']['zoom_range'],
+    )
+    train_data_gen = image_gen_train.flow_from_directory(batch_size=hyperparameters['batch_size'],
+                                                   directory=train_data_path,
+                                                   shuffle=True,
+                                                   target_size=(hyperparameters['input_shape'][0], hyperparameters['input_shape'][1]))
+
+    test_data_gen = image_gen_test.flow_from_directory(batch_size=hyperparameters['batch_size'],
+                                                         directory=test_data_path,
+                                                         shuffle=True,
+                                                         target_size=(hyperparameters['input_shape'][0],
+                                                                      hyperparameters['input_shape'][1]))
+
+
+    return train_data_gen, test_data_gen, len(train_list), len(test_list)
+
+
+def load_data(hyperparameters):
+    if hyperparameters['use_gen']:
+        return get_data_with_generator(hyperparameters)
+    else:
+        return get_data(hyperparameters)
+
