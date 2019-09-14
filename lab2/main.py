@@ -30,8 +30,9 @@ for task in tasks:
         history = model.fit_generator(train_data_gen,
             steps_per_epoch=total_train // hyperparameters['batch_size'], epochs=hyperparameters['epochs'],
             validation_data=test_data_gen, validation_steps=total_val // hyperparameters['batch_size'])
+        print(model.evaluate_generator(test_data_gen))
     else:
         model_history = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=hyperparameters['epochs'], batch_size=hyperparameters['batch_size'], verbose=0)
+        print(model.evaluate(x_test, y_test))
 
     plot_history(model_history, task)
-    print(model.evaluate(x_test, y_test))
