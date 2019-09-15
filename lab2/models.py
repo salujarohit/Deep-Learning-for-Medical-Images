@@ -5,34 +5,14 @@ try:
     from tensorflow.keras.models import Sequential
     from tensorflow.keras.layers import Flatten, Conv2D, MaxPooling2D, Activation, Dropout, Dense, BatchNormalization, SpatialDropout2D
     from tensorflow.keras.optimizers import Adam, SGD, RMSprop
+    from tensorflow.keras.applications import VGG16, InceptionV3
+
 except:
     import tensorflow as tf
     from tensorflow.python.keras.models import Sequential
     from tensorflow.python.keras.layers.core import Flatten, Conv2D, MaxPooling2D, Activation, Dropout, Dense, BatchNormalization, SpatialDropout2D
     from tensorflow.python.keras.optimizers import Adam, SGD, RMSprop
-
-# LeNet Model
-def model_LeNet(hyperparameters):
-    model = Sequential()
-    model.add(Conv2D(hyperparameters['base'], kernel_size=(3, 3), activation='relu',
-                     strides=1, padding='same',
-                     input_shape=hyperparameters['input_shape']))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-
-    model.add(Conv2D(hyperparameters['base'] * 2, kernel_size=(3, 3), activation='relu',
-                     strides=1, padding='same'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-
-    model.add(Flatten())
-    model.add(Dense(hyperparameters['base'] * 2, activation='relu'))
-    model.add(Dense(1, activation='sigmoid'))
-    print(model.summary())
-    model.compile(loss=hyperparameters['loss'],
-                        optimizer=hyperparameters['optimizer'](lr=hyperparameters['lr']),
-                        metrics=['binary_accuracy'])
-
-    return model
-
+    from tensorflow.python.keras.applications import VGG16, InceptionV3
 
 # AlexNet Model
 def model_AlexNet(hyperparameters):
@@ -69,23 +49,19 @@ def model_AlexNet(hyperparameters):
         model.add(SpatialDropout2D(hyperparameters['spatial_dropout'][2]))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Flatten())
-    model.add(Dense(64))
-    model.add(Activation('relu'))
-    if len(hyperparameters['dropout']) > 0:
-        model.add(Dropout(hyperparameters['dropout'][0]))
-    model.add(Dense(64))
-    model.add(Activation('relu'))
-    if len(hyperparameters['dropout']) > 1:
-        model.add(Dropout(hyperparameters['dropout'][1]))
-    model.add(Dense(1))
-    model.add(Activation('sigmoid'))
+    for i, unit in enumerate(hyperparameters['dense_units']):
+        model.add(Dense(unit))
+        model.add(Activation(hyperparameters['dense_activation'][i]))
+        if len(hyperparameters['dropout']) > i:
+            model.add(Dropout(hyperparameters['dropout'][i]))
 
     print(model.summary())
     model.compile(loss=hyperparameters['loss'],
                         optimizer=hyperparameters['optimizer'](lr=hyperparameters['lr']),
-                        metrics=['binary_accuracy'])
+                        metrics=hyperparameters['metrics'])
 
     return model
+
 
 def model_vgg16(hyperparameters):
     model = Sequential()
@@ -157,23 +133,27 @@ def model_vgg16(hyperparameters):
         model.add(SpatialDropout2D(hyperparameters['spatial_dropout'][4]))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     model.add(Flatten())
-    model.add(Dense(64))
-    model.add(Activation('relu'))
-    if len(hyperparameters['dropout']) > 0:
-        model.add(Dropout(hyperparameters['dropout'][0]))
-    model.add(Dense(64))
-    model.add(Activation('relu'))
-    if len(hyperparameters['dropout']) > 1:
-        model.add(Dropout(hyperparameters['dropout'][1]))
-    model.add(Dense(1, activation='sigmoid'))
-
+    for i, unit in enumerate(hyperparameters['dense_units']):
+        model.add(Dense(unit))
+        model.add(Activation(hyperparameters['dense_activation'][i]))
+        if len(hyperparameters['dropout']) > i:
+            model.add(Dropout(hyperparameters['dropout'][i]))
 
     print(model.summary())
     model.compile(loss=hyperparameters['loss'],
                   optimizer=hyperparameters['optimizer'](lr=hyperparameters['lr']),
-                  metrics=['binary_accuracy'])
+                  metrics=hyperparameters['metrics'])
 
     return model
+
+
+def get_pretrained_model(hyperparameters):
+    base = VGG16
+    if hyperparameters['model'] == "inception":
+        base = InceptionV3
+    base_model = base(input_shape=hyperparameters['input_shape'], include_top=False, weights='imagenet')
+    
+
 
 def get_model(hyperparameters):
     if hyperparameters['model'] == "lenet":
@@ -182,6 +162,7 @@ def get_model(hyperparameters):
         return model_AlexNet(hyperparameters)
     elif hyperparameters['model'] == "vgg16":
         return model_vgg16(hyperparameters)
+
 
 def plot_history(History, task_number):
     fig = plt.figure(figsize=(4, 4))

@@ -86,11 +86,20 @@ def get_data(hyperparameters):
     return x_train, x_test, y_train, y_test
 
 
+def get_number_images(data_path):
+    number_images = 0
+    target_list = os.listdir(data_path)
+    for target in target_list:
+        number_images += len(os.listdir(os.path.join(data_path, target)))
+
+    return number_images
+
+
 def get_data_with_generator(hyperparameters):
     train_data_path = os.path.join(os.path.join(os.getcwd(), hyperparameters['data_path']), 'train')
-    test_data_path = os.path.join(os.path.join(os.getcwd(), hyperparameters['data_path']), 'test')
-    train_list = os.listdir(train_data_path)
-    test_list = os.listdir(test_data_path)
+    test_data_path = os.path.join(os.path.join(os.getcwd(), hyperparameters['data_path']), 'validation')
+    num_train = get_number_images(train_data_path)
+    num_test = get_number_images(test_data_path)
     image_gen_train = ImageDataGenerator(
         rescale=hyperparameters['gen']['rescale'],
         rotation_range=hyperparameters['gen']['rotation_range'],
@@ -109,17 +118,17 @@ def get_data_with_generator(hyperparameters):
     )
     train_data_gen = image_gen_train.flow_from_directory(batch_size=hyperparameters['batch_size'],
                                                    directory=train_data_path,
-                                                   shuffle=True,
+                                                   shuffle=True,class_mode="binary",
                                                    target_size=(hyperparameters['input_shape'][0], hyperparameters['input_shape'][1]))
 
     test_data_gen = image_gen_test.flow_from_directory(batch_size=hyperparameters['batch_size'],
                                                          directory=test_data_path,
-                                                         shuffle=True,
+                                                         shuffle=True,class_mode="binary",
                                                          target_size=(hyperparameters['input_shape'][0],
                                                                       hyperparameters['input_shape'][1]))
 
 
-    return train_data_gen, test_data_gen, len(train_list), len(test_list)
+    return train_data_gen, test_data_gen, num_train, num_test
 
 
 def load_data(hyperparameters):

@@ -2,12 +2,12 @@ import argparse
 from utils import hyperparameters_processing, get_hyperparameters
 from models import get_model, plot_history
 from data_loader import load_data
-import tensorflow as tf
-tf.config.gpu.set_per_process_memory_fraction(.3)
-tf.config.gpu.set_per_process_memory_growth(True)
+# import tensorflow as tf
+# tf.config.gpu.set_per_process_memory_fraction(.3)
+# tf.config.gpu.set_per_process_memory_growth(True)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-t", "--task", type=str, default="test", help="Please enter tasks' numbers in a string separated by comma")
+parser.add_argument("-t", "--task", type=str, default="test_local", help="Please enter tasks' numbers in a string separated by comma")
 
 data_path = ''
 use_gen = False
@@ -27,7 +27,7 @@ for task in tasks:
 
     model = get_model(hyperparameters)
     if hyperparameters['use_gen']:
-        history = model.fit_generator(train_data_gen,
+        model_history = model.fit_generator(train_data_gen,
             steps_per_epoch=total_train // hyperparameters['batch_size'], epochs=hyperparameters['epochs'],
             validation_data=test_data_gen, validation_steps=total_val // hyperparameters['batch_size'])
         print(model.evaluate_generator(test_data_gen))
