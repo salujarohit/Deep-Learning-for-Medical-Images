@@ -3,14 +3,14 @@ import matplotlib.pyplot as plt
 import os
 try:
     from tensorflow.keras.models import Sequential
-    from tensorflow.keras.layers import Flatten, Conv2D, MaxPooling2D, Activation, Dropout, Dense, BatchNormalization, SpatialDropout2D
+    from tensorflow.keras.layers import Flatten, Conv2D, MaxPooling2D, Activation, Dropout, Dense, BatchNormalization, SpatialDropout2D, GlobalAveragePooling2D
     from tensorflow.keras.optimizers import Adam, SGD, RMSprop
     from tensorflow.keras.applications import VGG16, InceptionV3
 
 except:
     import tensorflow as tf
     from tensorflow.python.keras.models import Sequential
-    from tensorflow.python.keras.layers.core import Flatten, Conv2D, MaxPooling2D, Activation, Dropout, Dense, BatchNormalization, SpatialDropout2D
+    from tensorflow.python.keras.layers.core import Flatten, Conv2D, MaxPooling2D, Activation, Dropout, Dense, BatchNormalization, SpatialDropout2D, GlobalAveragePooling2D
     from tensorflow.python.keras.optimizers import Adam, SGD, RMSprop
     from tensorflow.python.keras.applications import VGG16, InceptionV3
 
@@ -146,17 +146,43 @@ def model_vgg16(hyperparameters):
 
     return model
 
+def process_pretrained_layer(hyperparameters, i):
+    if hyperparameters['pretrained_prop']['added_layers'][i] == "Dense":
+        layer = Dense(int(hyperparameters['pretrained_prop']['added_layers_parameters'][i]))
+    elif hyperparameters['pretrained_prop']['added_layers'][i] == "Flatten":
+        layer = Flatten()
+    elif hyperparameters['pretrained_prop']['added_layers'][i] == "GlobalAveragePooling2D":
+        layer = GlobalAveragePooling2D()
+    elif hyperparameters['pretrained_prop']['added_layers'][i] == "Activation":
+        layer = Activation(hyperparameters['pretrained_prop']['added_layers_parameters'][i])
+    elif hyperparameters['pretrained_prop']['added_layers'][i] == "Dropout":
+        layer = Dropout(float(hyperparameters['pretrained_prop']['added_layers_parameters'][i]))
+    return layer
 
 def get_pretrained_model(hyperparameters):
     base = VGG16
-    if hyperparameters['model'] == "inception":
+    if hyperparameters['pretrained_prop']['pretrained_model'] == "inception":
         base = InceptionV3
-    base_model = base(input_shape=hyperparameters['input_shape'], include_top=False, weights='imagenet')
-    
+    base_model = base(input_shape=hyperparameters['input_shape'],
+                      include_top=hyperparameters['pretrained_prop']['include_top'],
+                      weights=hyperparameters['pretrained_prop']['weights'])
+    base_model.trainable = hyperparameters['pretrained_prop']['base_model_trainable']
+    model = Sequential()
+    model.add(base_model)
+    for i, _ in enumerate(hyperparameters['pretrained_prop']['added_layers']):
+        model.add(process_pretrained_layer(hyperparameters, i))
+
+    print(model.summary())
+    model.compile(loss=hyperparameters['loss'],
+                  optimizer=hyperparameters['optimizer'](lr=hyperparameters['lr']),
+                  metrics=hyperparameters['metrics'])
+    return model
 
 
 def get_model(hyperparameters):
-    if hyperparameters['model'] == "alexnet":
+    if hyperparameters['use_pretrained']:
+        return  get_pretrained_model(hyperparameters)
+    elif hyperparameters['model'] == "alexnet":
         return model_AlexNet(hyperparameters)
     elif hyperparameters['model'] == "vgg16":
         return model_vgg16(hyperparameters)
