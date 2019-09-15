@@ -156,9 +156,7 @@ def get_pretrained_model(hyperparameters):
 
 
 def get_model(hyperparameters):
-    if hyperparameters['model'] == "lenet":
-        return model_LeNet(hyperparameters)
-    elif hyperparameters['model'] == "alexnet":
+    if hyperparameters['model'] == "alexnet":
         return model_AlexNet(hyperparameters)
     elif hyperparameters['model'] == "vgg16":
         return model_vgg16(hyperparameters)
