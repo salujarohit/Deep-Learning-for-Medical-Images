@@ -16,6 +16,10 @@ First make sure you are in the right directory of Lab2.
 - python main.py -t "3a" 
 ##### Task 3b (without dropout):
 - python main.py -t "3b" 
+##### Task 4a (skin):
+- python main.py -t "4a" 
+##### Task 4b (Bone):
+- python main.py -t "4b" 
 ##### Task 6:
 - python main.py -t "6" 
 ##### Task 7a (skin):
@@ -27,10 +31,8 @@ First make sure you are in the right directory of Lab2.
 ##### Task 9b (Bone):
 - python main.py -t "9b" 
 
-###Notes:
+### Notes:
 - For remaining tasks: 
-    - Task 4, Server was not running, so we could not test it. However if you want to run it,
-     here is the command **python main.py -t "4a"** for skin data, and **python main.py -t "4b"** for bone data.
     - Task 10, there is a problem on eager execution, as soon as we solve it, 
      you can run it using this command **python main.py -t "10"**    
     
