@@ -65,16 +65,16 @@ def get_hyperparameters(task):
                'base': 64, 'input_shape': (128, 128, 1), 'data_path': '/Lab1/Skin/', 'pattern': ['Mel', 'Nev'],
                'use_gen': False, 'use_pretrained': False, 'show_visualization': False},
         '4a': {'lr': .00001, 'batch_size': 8, 'epochs': 150, 'batch_norm': True, 'dropout': [.4, .4],
-               'spatial_dropout': [], 'optimizer': 'Adam', 'loss': 'binary_crossentropy',
+               'spatial_dropout': [.1, .1, .1, .1, .1], 'optimizer': 'Adam', 'loss': 'binary_crossentropy',
                 'metrics': ['binary_accuracy'],
                 'model': 'vgg16', 'dense_units': [64, 64, 1], 'dense_activation': ['relu', 'relu', 'sigmoid'],
                'base': 16, 'input_shape': (128, 128, 1), 'data_path': '/Lab1/Skin/', 'pattern': ['Mel', 'Nev'],
                'use_gen': False, 'use_pretrained': False, 'show_visualization': False},
         '4b': {'lr': .00001, 'batch_size': 8, 'epochs': 150, 'batch_norm': True, 'dropout': [.4, .4],
-               'spatial_dropout': [], 'optimizer': 'Adam', 'loss': 'binary_crossentropy',
+               'spatial_dropout': [.1, .1, .1, .1, .1], 'optimizer': 'Adam', 'loss': 'binary_crossentropy',
                'metrics': ['binary_accuracy'],
                'model': 'vgg16', 'dense_units': [64, 64, 1], 'dense_activation': ['relu', 'relu', 'sigmoid'],
-               'base': 16, 'input_shape': (128, 128, 1), 'data_path': '/Lab1/Bone/', 'pattern': ['AFF', 'NFF'],
+               'base': 8, 'input_shape': (128, 128, 1), 'data_path': '/Lab1/Bone/', 'pattern': ['AFF', 'NFF'],
                'use_gen': False, 'use_pretrained': False, 'show_visualization': False},
         '6': {'lr': .00001, 'batch_size': 8, 'epochs': 80, 'batch_norm': True, 'dropout': [.4, .4],
               'spatial_dropout': [], 'optimizer': 'Adam', 'loss': 'binary_crossentropy',
@@ -152,7 +152,18 @@ def get_hyperparameters(task):
                'gen_test': {'rescale': 1. / 255, 'rotation_range': 0, 'width_shift_range': 0,
                             'height_shift_range': 0, 'horizontal_flip': False, 'zoom_range': 0},
                'use_pretrained': False, 'show_visualization': True
+               },
+        'bonus_task': {'lr': .00001, 'batch_size': 8, 'epochs': 50, 'batch_norm': False, 'dropout': [],
+               'spatial_dropout': [], 'optimizer': 'Adam', 'loss': 'categorical_crossentropy',
+               'metrics': ['accuracy'],
+               'model': 'resnet', 'dense_units': [2], 'dense_activation': ['softmax'],
+               'base': 64, 'input_shape': (224, 224, 1), 'data_path': '/Lab1/Lab2/Bone/', 'pattern': ['AFF', 'NFF'],
+               'use_gen': True,
+               'gen': {'rescale': 1. / 255, 'rotation_range': 10, 'width_shift_range': .1,
+                       'height_shift_range': .1, 'horizontal_flip': True, 'zoom_range': 0},
+               'gen_test': {'rescale': 1. / 255, 'rotation_range': 0, 'width_shift_range': 0,
+                            'height_shift_range': 0, 'horizontal_flip': False, 'zoom_range': 0},
+               'use_pretrained': False, 'show_visualization': False
                }
-
     }
     return task_dict[task]
