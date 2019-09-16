@@ -2,13 +2,15 @@ import argparse
 from utils import hyperparameters_processing, get_hyperparameters
 from models import get_model, plot_history
 from data_loader import load_data
+import os
 import tensorflow as tf
 
 tf.config.gpu.set_per_process_memory_fraction(.3)
 tf.config.gpu.set_per_process_memory_growth(True)
+# tf.compat.v1.disable_eager_execution()
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-t", "--task", type=str, default="test",
+parser.add_argument("-t", "--task", type=str, default="1a",
                     help="Please enter tasks' numbers in a string separated by comma")
 
 data_path = ''
@@ -42,3 +44,8 @@ for task in tasks:
         print(model.evaluate(x_test, y_test))
 
     plot_history(model_history, task)
+    if hyperparameters['show_visualization']:
+        #         model.save(os.path.join(os.path.join(os.getcwd(), 'results'), str(task)+"model.h5"))
+        from visualization import show_visualization
+
+        show_visualization(model, hyperparameters)
