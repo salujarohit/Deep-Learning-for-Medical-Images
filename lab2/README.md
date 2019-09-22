@@ -30,6 +30,8 @@ First make sure you are in the right directory of Lab2.
 - python main.py -t "9a" 
 ##### Task 9b (Bone):
 - python main.py -t "9b" 
+##### Bonus Task:
+- python main.py -t "bonus_task" 
 
 ### Notes:
 - For remaining tasks: 
