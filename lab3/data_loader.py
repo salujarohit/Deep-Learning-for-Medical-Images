@@ -13,7 +13,6 @@ except:
     from tensorflow.python.keras.preprocessing.image import ImageDataGenerator, array_to_img
     from tensorflow.python.keras.utils import Sequence
 
-# reading and resizing the training images with their corresponding labels
 def get_data(hyperparameters):
     data_path = os.path.join(os.getcwd(), hyperparameters['data_path'])
     image_names = os.listdir(os.path.join(data_path, 'Image'))
@@ -36,7 +35,7 @@ def get_data(hyperparameters):
 
         mask[mask < 200] = 0
         mask[mask >= 200] = 255
-        mask /= 255;
+        mask /= 255
 
         data.append([img, mask])
 

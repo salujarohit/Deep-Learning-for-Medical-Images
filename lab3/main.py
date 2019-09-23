@@ -1,10 +1,10 @@
 import argparse
-from utils import hyperparameters_processing, get_hyperparameters, plot_pair
+from utils import hyperparameters_processing, get_hyperparameters, plot_pair, update_board
 from models import get_unet, plot_history
 from data_loader import load_data
-import tensorflow as tf
-tf.config.gpu.set_per_process_memory_fraction(.6)
-tf.config.gpu.set_per_process_memory_growth(True)
+# import tensorflow as tf
+# tf.config.gpu.set_per_process_memory_fraction(.6)
+# tf.config.gpu.set_per_process_memory_growth(True)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", "--task", type=str, default="1a",
@@ -22,5 +22,5 @@ for task in tasks:
                                         epochs=hyperparameters['epochs'],
                                         validation_data=test_data_gen,
                                         validation_steps=total_val // hyperparameters['batch_size'])
-    print(model.evaluate_generator(test_data_gen, steps=total_val))
     plot_history(hyperparameters, model_history, task)
+    update_board(hyperparameters, model.evaluate_generator(test_data_gen, steps=total_val), task)

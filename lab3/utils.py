@@ -80,6 +80,20 @@ def get_hyperparameters(task):
     with open(file_path) as file:
         return json.load(file)
 
+def update_board (hyperparameters, evaluation, task):
+    file_name = 'tasks/' + 'board' + '.json'
+    file_path = os.path.join(os.getcwd(), file_name)
+    with open(file_path) as file:
+        board_dict = json.load(file)
+    if task not in board_dict:
+        board_dict[task] = {}
+    if task in board_dict:
+        board_dict[task]['loss'] = str(evaluation[0])
+        for metric in hyperparameters['metrics']:
+            board_dict[task][metric] = str(evaluation[1])
+    with open(file_path, 'w') as outfile:
+        json.dump(board_dict, outfile)
+
 # def get_hyperparameters(task):
 #     task_dict = {
 #         '1a': {'lr': .0001, 'batch_size': 8, 'epochs': 150, 'batch_norm': True, 'dropout': .5, 'optimizer': 'Adam',
