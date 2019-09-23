@@ -34,9 +34,9 @@ def get_unet(hyperparameters):
     if hyperparameters['batch_norm']:
         conv1 = BatchNormalization()(conv1)
     conv1 = Activation('relu')(conv1)
-    if hyperparameters['dropout'] != 0:
-        conv1 = Dropout(hyperparameters['dropout'])(conv1)
     pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
+    if hyperparameters['dropout'] != 0:
+        pool1 = Dropout(hyperparameters['dropout'])(pool1)
     conv2 = Conv2D(hyperparameters['base'] * 2, (3, 3), padding='same')(pool1)
     if hyperparameters['batch_norm']:
         conv2 = BatchNormalization()(conv2)
@@ -45,9 +45,9 @@ def get_unet(hyperparameters):
     if hyperparameters['batch_norm']:
         conv2 = BatchNormalization()(conv2)
     conv2 = Activation('relu')(conv2)
-    if hyperparameters['dropout'] != 0:
-        conv2 = Dropout(hyperparameters['dropout'])(conv2)
     pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
+    if hyperparameters['dropout'] != 0:
+        pool2 = Dropout(hyperparameters['dropout'])(pool2)
     conv3 = Conv2D(hyperparameters['base'] * 4, (3, 3), padding='same')(pool2)
     if hyperparameters['batch_norm']:
         conv3 = BatchNormalization()(conv3)
@@ -56,9 +56,9 @@ def get_unet(hyperparameters):
     if hyperparameters['batch_norm']:
         conv3 = BatchNormalization()(conv3)
     conv3 = Activation('relu')(conv3)
-    if hyperparameters['dropout'] != 0:
-        conv3 = Dropout(hyperparameters['dropout'])(conv3)
     pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
+    if hyperparameters['dropout'] != 0:
+        pool3 = Dropout(hyperparameters['dropout'])(pool3)
     conv4 = Conv2D(hyperparameters['base'] * 8, (3, 3), padding='same')(pool3)
     if hyperparameters['batch_norm']:
         conv4 = BatchNormalization()(conv4)
@@ -67,9 +67,9 @@ def get_unet(hyperparameters):
     if hyperparameters['batch_norm']:
         conv4 = BatchNormalization()(conv4)
     conv4 = Activation('relu')(conv4)
-    if hyperparameters['dropout'] != 0:
-        conv4 = Dropout(hyperparameters['dropout'])(conv4)
     pool4 = MaxPooling2D(pool_size=(2, 2))(conv4)
+    if hyperparameters['dropout'] != 0:
+        pool4 = Dropout(hyperparameters['dropout'])(pool4)
     conv5 = Conv2D(hyperparameters['base'] * 16, (3, 3), padding='same')(pool4)
     if hyperparameters['batch_norm']:
         conv5 = BatchNormalization()(conv5)
@@ -114,7 +114,7 @@ def get_unet(hyperparameters):
     if hyperparameters['batch_norm']:
         conv9 = BatchNormalization()(conv9)
     conv9 = Activation('relu')(conv9)
-    conv10 = Conv2D(1, (1, 1), activation='sigmoid')(conv9)
+    conv10 = Conv2D(hyperparameters['last_layer_units'], (1, 1), activation=hyperparameters['last_layer_activation'])(conv9)
     model = Model(inputs=[inputs], outputs=[conv10])
     print(model.summary())
     model.compile(loss=hyperparameters['loss'],

@@ -23,8 +23,6 @@ def get_data(hyperparameters):
     for i, (image_name, mask_name) in enumerate(zip(image_names, mask_names)):
         img = imread(os.path.join(os.path.join(data_path, 'Image'), image_name))
         mask = imread(os.path.join(os.path.join(data_path, 'Mask'), mask_name))
-        mask[mask < 200] = 0
-        mask[mask >= 200] = 255
         if hyperparameters['input_shape'][2] == 1:
             img = rgb2gray(img)
             img = np.expand_dims(np.array(img), axis=3)
@@ -33,8 +31,13 @@ def get_data(hyperparameters):
 
         img = resize(img, (hyperparameters['input_shape'][0], hyperparameters['input_shape'][1]),
                      anti_aliasing=True).astype('float32')
-        mask = resize(mask, (hyperparameters['input_shape'][0], hyperparameters['input_shape'][1]),
-                     anti_aliasing=True).astype('float32')
+        mask = resize(mask, (hyperparameters['input_shape'][0], hyperparameters['input_shape'][0]), order=0,
+                     anti_aliasing=False, preserve_range=True)
+
+        mask[mask < 200] = 0
+        mask[mask >= 200] = 255
+        mask /= 255;
+
         data.append([img, mask])
 
         if i % 200 == 0:
@@ -53,34 +56,42 @@ def get_data(hyperparameters):
 
     return x_train, x_test, y_train, y_test
 
+def combine_generators(gen1, gen2):
+    while True:
+        batch_x = next(gen1)
+        batch_y = next(gen2)
+        yield batch_x, batch_y
 
 def get_data_with_generator(hyperparameters):
     x_train, x_test, y_train, y_test = get_data(hyperparameters)
     num_test = len(x_test)
     num_train = len(x_train)
-    data_generator = ImageDataGenerator(
-        validation_split=hyperparameters['test_size'],
-        rescale=hyperparameters['generator']['rescale'],
-        rotation_range=hyperparameters['generator']['rotation_range'],
-        width_shift_range=hyperparameters['generator']['width_shift_range'],
-        height_shift_range=hyperparameters['generator']['height_shift_range'],
-        horizontal_flip=hyperparameters['generator']['horizontal_flip'],
-        zoom_range=hyperparameters['generator']['zoom_range'],
-    )
+    default_generator_parameters = {'rescale': 0, 'rotation_range': 0, 'width_shift_range': 0,
+                      'height_shift_range': 0, 'horizontal_flip': False, 'zoom_range': 0}
+    train_generator_parameters = default_generator_parameters if 'generator' not in hyperparameters else hyperparameters['generator']
+    test_generator_parameters = default_generator_parameters if 'test_generator' not in hyperparameters else hyperparameters['test_generator']
+    data_generator_train = ImageDataGenerator(**train_generator_parameters)
+    data_generator_test = ImageDataGenerator(**test_generator_parameters)
+    train_data_generator_image = data_generator_train.flow(x_train, batch_size=hyperparameters['batch_size'],
+                                                           shuffle=True, seed=100)
+    train_data_generator_mask = data_generator_train.flow(y_train, batch_size=hyperparameters['batch_size'],
+                                                          shuffle=True, seed=100)
+    test_data_generator_image = data_generator_test.flow(x_test, batch_size=hyperparameters['batch_size'],
+                                                               shuffle=True, seed=100)
+    test_data_generator_mask = data_generator_test.flow(y_test, batch_size=hyperparameters['batch_size'],
+                                                              shuffle=True, seed=100)
 
+    train_data_generator = combine_generators(train_data_generator_image, train_data_generator_mask)
+    test_data_generator = combine_generators(test_data_generator_image, test_data_generator_mask)
 
-    train_data_generator = data_generator.flow(x_train, y_train, batch_size=hyperparameters['batch_size'], shuffle=True)
-
-    validation_data_generator = data_generator.flow(x_test, y_test, batch_size=hyperparameters['batch_size'], shuffle=True)
-
-    return train_data_generator, validation_data_generator, num_train, num_test
+    return train_data_generator, test_data_generator, num_train, num_test
 
 
 def load_data(hyperparameters):
-    if 'generator' in hyperparameters:
-        return get_data_with_generator(hyperparameters)
-    else:
-        return get_data(hyperparameters)
+    # if 'generator' in hyperparameters:
+    return get_data_with_generator(hyperparameters)
+    # else:
+    #     return get_data(hyperparameters)
 
 class MyGenerator(Sequence):
 
