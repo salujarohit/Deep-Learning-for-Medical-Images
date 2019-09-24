@@ -7,7 +7,7 @@ from data_loader import load_data
 # tf.config.gpu.set_per_process_memory_growth(True)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-t", "--task", type=str, default="1a",
+parser.add_argument("-t", "--task", type=str, default="4",
                     help="Please enter tasks' numbers in a string separated by comma")
 
 args = parser.parse_args()

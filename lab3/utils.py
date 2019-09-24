@@ -7,6 +7,15 @@ except:
 import matplotlib.pyplot as plt
 import json
 import os
+
+def fix_rescale(rescale_str):
+    rescale_list = rescale_str.split('/')
+    if len(rescale_list) > 1:
+        return float(rescale_list[0]) / float(rescale_list[1])
+    else:
+        return float(rescale_str)
+
+
 def hyperparameters_processing(hyperparameters):
 
     if hyperparameters['optimizer'] == "RMSprop":
@@ -31,6 +40,11 @@ def hyperparameters_processing(hyperparameters):
 
     if hyperparameters['loss'] == 'dice_loss':
         hyperparameters['loss'] = dice_coef_loss
+
+    if 'generator' in hyperparameters:
+        hyperparameters['generator']['rescale'] = fix_rescale(hyperparameters['generator']['rescale'])
+    if 'test_generator' in hyperparameters:
+        hyperparameters['test_generator']['rescale'] = fix_rescale(hyperparameters['test_generator']['rescale'])
     return hyperparameters
 
 

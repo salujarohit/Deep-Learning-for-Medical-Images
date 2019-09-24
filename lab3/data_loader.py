@@ -13,6 +13,13 @@ except:
     from tensorflow.python.keras.preprocessing.image import ImageDataGenerator, array_to_img
     from tensorflow.python.keras.utils import Sequence
 
+
+def binarize(img, values=[255]):
+    mask = np.zeros((img.shape))
+    for value in values:
+        mask[img == value] = value
+    return mask
+
 def get_data(hyperparameters):
     data_path = os.path.join(os.getcwd(), hyperparameters['data_path'])
     image_names = os.listdir(os.path.join(data_path, 'Image'))
@@ -33,8 +40,9 @@ def get_data(hyperparameters):
         mask = resize(mask, (hyperparameters['input_shape'][0], hyperparameters['input_shape'][0]), order=0,
                      anti_aliasing=False, preserve_range=True)
 
-        mask[mask < 200] = 0
-        mask[mask >= 200] = 255
+        mask = binarize(mask, hyperparameters['binarize_values'])
+        # mask[mask < 200] = 0
+        # mask[mask >= 200] = 255
         mask /= 255
 
         data.append([img, mask])

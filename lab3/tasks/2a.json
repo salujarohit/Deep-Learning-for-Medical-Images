@@ -13,5 +13,6 @@
   "data_path": "/Lab1/Lab3/X_ray/",
   "test_size": 0.2,
   "last_layer_units": 1,
-  "last_layer_activation": "sigmoid"
+  "last_layer_activation": "sigmoid",
+  "binarize_values": [255]
 }
