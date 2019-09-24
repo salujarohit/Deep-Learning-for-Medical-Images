@@ -71,7 +71,7 @@ def get_data(hyperparameters):
     shuffle(data)
 
     x = np.zeros((len(data), hyperparameters['input_shape'][0], hyperparameters['input_shape'][1], hyperparameters['input_shape'][2]), dtype=np.float32)
-    y = np.zeros((len(data), hyperparameters['input_shape'][0], hyperparameters['input_shape'][1], hyperparameters['input_shape'][2]), dtype=np.float32)
+    y = np.zeros((len(data), hyperparameters['input_shape'][0], hyperparameters['input_shape'][1], hyperparameters['last_layer_units']), dtype=np.float32)
 
     for i in range(len(data)):
         x[i] = data[i][0]
