@@ -5,7 +5,7 @@ from skimage.io import imread
 from skimage.color import rgb2gray
 from skimage.transform import resize
 import random
-from  sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split
 try:
     from tensorflow.keras.processing.image import ImageDataGenerator, array_to_img
     from tensorflow.keras.utils import Sequence
@@ -19,6 +19,13 @@ def binarize(img, values=[255]):
     for value in values:
         mask[img == value] = value
     return mask
+
+
+def unify(img, unify_dict):
+    for key in unify_dict:
+        img[img == int(key)] = int(unify_dict[key])
+    return img
+
 
 def get_data(hyperparameters):
     data_path = os.path.join(os.getcwd(), hyperparameters['data_path'])
@@ -41,8 +48,8 @@ def get_data(hyperparameters):
                      anti_aliasing=False, preserve_range=True)
 
         mask = binarize(mask, hyperparameters['binarize_values'])
-        # mask[mask < 200] = 0
-        # mask[mask >= 200] = 255
+        if "unify_dict" in hyperparameters:
+            mask = unify(mask, hyperparameters['unify_dict'])
         mask /= 255
 
         data.append([img, mask])
