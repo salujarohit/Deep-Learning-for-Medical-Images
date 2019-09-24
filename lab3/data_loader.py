@@ -15,7 +15,7 @@ except:
 
 
 def binarize(img, values=[255]):
-    mask = np.zeros((img.shape))
+    mask = np.zeros(img.shape)
     for value in values:
         mask[img == value] = value
     return mask
@@ -25,6 +25,15 @@ def unify(img, unify_dict):
     for key in unify_dict:
         img[img == int(key)] = int(unify_dict[key])
     return img
+
+
+def to_categorical(img, num_classes):
+    shape = list(img.shape)
+    shape[2] = num_classes
+    mask = np.zeros(shape)
+    for i, value in enumerate(np.unique(img)):
+        mask[(img == value)[:, :, 0], i] = 1
+    return mask
 
 
 def get_data(hyperparameters):
@@ -51,6 +60,8 @@ def get_data(hyperparameters):
         if "unify_dict" in hyperparameters:
             mask = unify(mask, hyperparameters['unify_dict'])
         mask /= 255
+        if hyperparameters['last_layer_units'] > 1:
+            mask = to_categorical(mask, num_classes=hyperparameters['last_layer_units'])
 
         data.append([img, mask])
 
