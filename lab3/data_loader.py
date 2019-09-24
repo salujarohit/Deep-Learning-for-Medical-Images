@@ -81,6 +81,7 @@ def get_data(hyperparameters):
 
     return x_train, x_test, y_train, y_test
 
+
 def combine_generators(gen1, gen2):
     while True:
         batch_x = next(gen1)
@@ -114,17 +115,21 @@ def get_data_with_generator(hyperparameters):
 
 def load_data(hyperparameters):
     # if 'generator' in hyperparameters:
-    return get_data_with_generator(hyperparameters)
+    if 'data_in_fly' in hyperparameters:
+        return get_data_with_generator_on_the_fly(hyperparameters)
+    else:
+        return get_data_with_generator(hyperparameters)
     # else:
     #     return get_data(hyperparameters)
 
 class MyGenerator(Sequence):
 
-    def __init__(self, image_filenames, mask_filenames, batch_size, input_shape, generator_features):
+    def __init__(self, image_filenames, mask_filenames, batch_size, input_shape, generator_features, hyperparameters):
         self.image_filenames, self.mask_filenames = image_filenames, mask_filenames
         self.batch_size = batch_size
         self.input_shape = input_shape
         self.generator_features = generator_features
+        self.hyperparameters = hyperparameters
 
     def __len__(self):
         return int(np.ceil(len(self.image_filenames) / float(self.batch_size)))
@@ -142,11 +147,23 @@ class MyGenerator(Sequence):
              batch_x])
         if self.input_shape[2] == 1:
             x = np.expand_dims(x, axis=3)
-        y = np.array(
-            [resize(imread(file_name, as_gray=as_gray), (self.input_shape[0], self.input_shape[1])) for file_name in
-             batch_y])
-        if self.input_shape[2] == 1:
-            y = np.expand_dims(y, axis=3)
+        # y = np.array(
+        #     [resize(imread(file_name, as_gray=as_gray), (self.input_shape[0], self.input_shape[1])) for file_name in
+        #      batch_y])
+        y_list = []
+        for file_name in batch_y:
+            mask = resize(imread(file_name, as_gray=as_gray), (self.input_shape[0], self.input_shape[1]))
+            if self.input_shape[2] == 1:
+                mask = np.expand_dims(mask, axis=3)
+            mask = binarize(mask, self.hyperparameters['binarize_values'])
+            if "unify_dict" in self.hyperparameters:
+                mask = unify(mask, self.hyperparameters['unify_dict'])
+            mask /= 255
+            if self.hyperparameters['last_layer_units'] > 1:
+                mask = to_categorical(mask, num_classes=self.hyperparameters['last_layer_units'])
+            y_list.append(mask)
+        y = np.array(y_list)
+
 
         data_gen = image_gen.flow(x, y, batch_size=self.batch_size)
         for batch_x, batch_y in data_gen:
@@ -169,7 +186,7 @@ def get_data_with_generator_on_the_fly(hyperparameters):
                                                         random_state=1)
     data_generator = hyperparameters['generator'] if 'generator' in hyperparameters else {}
     training_batch_generator = MyGenerator(x_train, y_train, hyperparameters['batch_size'],
-                                           hyperparameters['input_shape'], data_generator)
+                                           hyperparameters['input_shape'], data_generator, hyperparameters)
     validation_batch_generator = MyGenerator(x_test, y_test, hyperparameters['batch_size'],
-                                             hyperparameters['input_shape'], data_generator)
+                                             hyperparameters['input_shape'], data_generator, hyperparameters)
     return training_batch_generator, validation_batch_generator, len(y_train), len(y_test)
