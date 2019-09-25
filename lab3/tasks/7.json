@@ -23,5 +23,5 @@
     "horizontal_flip": true,
     "zoom_range": 0.2
   },
-  "test_generator": {"rescale": "1.0 / 255.0"},
+  "test_generator": {"rescale": "1.0 / 255.0"}
 }
