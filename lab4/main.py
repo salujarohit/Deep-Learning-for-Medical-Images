@@ -25,11 +25,11 @@ for task in tasks:
                                                                                                    validation_images,
                                                                                                    validation_masks)
         model = get_unet(hyperparameters)
-        for i in range(10):
-            batch_x, batch_y = train_data_gen.__getitem__(i)
-            plot_pair(batch_x[0,:,:,0],batch_y[0,:,:,0])
-            batch_x, batch_y = test_data_gen.__getitem__(i)
-            plot_pair(batch_x[0, :, :, 0], batch_y[0, :, :, 0])
+        # for i in range(10):
+        #     batch_x, batch_y = train_data_gen.__getitem__(i)
+        #     plot_pair(batch_x[0,:,:,0],batch_y[0,:,:,0])
+        #     batch_x, batch_y = test_data_gen.__getitem__(i)
+        #     plot_pair(batch_x[0, :, :, 0], batch_y[0, :, :, 0])
         model_history = model.fit_generator(train_data_gen,
                                             steps_per_epoch=total_train // hyperparameters['batch_size'],
                                             epochs=hyperparameters['epochs'],

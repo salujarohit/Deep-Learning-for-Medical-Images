@@ -13,7 +13,5 @@
   "data_path": "/Lab1/Lab3/MRI/",
   "num_folds": 3,
   "last_layer_units": 1,
-  "last_layer_activation": "sigmoid",
-  "generator": {"rescale": "1.0 / 255.0 "},
-  "test_generator": {"rescale": "1.0 / 255.0"}
+  "last_layer_activation": "sigmoid"
 }
