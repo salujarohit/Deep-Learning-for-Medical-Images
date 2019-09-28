@@ -1,0 +1,114 @@
+try:
+    from tensorflow.keras.optimizers import Adam, SGD, RMSprop
+    import tensorflow.keras.backend as K
+except:
+    from tensorflow.python.keras.optimizers import Adam, SGD, RMSprop
+    import tensorflow.python.keras.backend as K
+import matplotlib.pyplot as plt
+import json
+import os
+
+def fix_rescale(rescale_str):
+    rescale_list = rescale_str.split('/')
+    if len(rescale_list) > 1:
+        return float(rescale_list[0]) / float(rescale_list[1])
+    else:
+        return float(rescale_str)
+
+
+def hyperparameters_processing(hyperparameters):
+
+    if hyperparameters['optimizer'] == "RMSprop":
+        hyperparameters['optimizer'] = RMSprop
+    elif hyperparameters['optimizer'] == "SGD":
+        hyperparameters['optimizer'] = SGD
+    else:
+        hyperparameters['optimizer'] = Adam
+
+    hyperparameters['metrics_func'] = []
+    for i, metric in enumerate(hyperparameters['metrics']):
+        if metric == 'dice_coef':
+            hyperparameters['metrics_func'].append(dice_coef)
+        elif metric == 'precision':
+            hyperparameters['metrics_func'].append(precision)
+        elif metric == 'recall':
+            hyperparameters['metrics_func'].append(recall)
+        elif metric == 'f1':
+            hyperparameters['metrics_func'].append(f1)
+        else:
+            hyperparameters['metrics_func'].append(metric)
+
+    if hyperparameters['loss'] == 'dice_loss':
+        hyperparameters['loss'] = dice_coef_loss
+
+    if 'generator' in hyperparameters:
+        hyperparameters['generator']['rescale'] = fix_rescale(hyperparameters['generator']['rescale'])
+    if 'test_generator' in hyperparameters:
+        hyperparameters['test_generator']['rescale'] = fix_rescale(hyperparameters['test_generator']['rescale'])
+
+    if "test_size" in hyperparameters:
+        hyperparameters['num_folds'] = 1
+
+    return hyperparameters
+
+
+def dice_coef_loss(y_true, y_pred):
+    return 1-dice_coef(y_true, y_pred)
+
+
+def dice_coef(y_true, y_pred, smooth=1):
+    """
+    Dice = (2*|X & Y|)/ (|X|+ |Y|)
+         =  2*sum(|A*B|)/(sum(A^2)+sum(B^2))
+    ref: https://arxiv.org/pdf/1606.04797v1.pdf
+    """
+    intersection = K.sum(K.abs(y_true * y_pred), axis=-1)
+    return (2. * intersection + smooth) / (K.sum(K.square(y_true), -1) + K.sum(K.square(y_pred),-1) + smooth)
+
+
+def plot_pair(img,mask):
+    fig, ax = plt.subplots(1, 2, figsize=(14, 2))
+    ax[0].imshow(img,cmap="gray")
+    ax[1].imshow(mask, cmap="gray")
+    plt.show()
+
+
+def recall(y_true, y_pred):
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+    recall_result = true_positives / (possible_positives + K.epsilon())
+    return recall_result
+
+
+def precision(y_true, y_pred):
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+    precision_result = true_positives / (predicted_positives + K.epsilon())
+    return precision_result
+
+
+def f1(y_true, y_pred):
+    precision_value = precision(y_true, y_pred)
+    recall_value = recall(y_true, y_pred)
+    return 2 * ((precision_value * recall_value) / (precision_value + recall_value + K.epsilon()))
+
+def get_hyperparameters(task):
+    file_name = 'tasks/'+task+'.json'
+    file_path = os.path.join(os.getcwd(), file_name)
+    with open(file_path) as file:
+        return json.load(file)
+
+def update_board (hyperparameters, evaluation, task):
+    file_name = 'tasks/' + 'board' + '.json'
+    file_path = os.path.join(os.getcwd(), file_name)
+    with open(file_path) as file:
+        board_dict = json.load(file)
+    if task not in board_dict:
+        board_dict[task] = {}
+    if task in board_dict:
+        board_dict[task]['loss'] = str(evaluation[0])
+        for metric in hyperparameters['metrics']:
+            board_dict[task][metric] = str(evaluation[1])
+    with open(file_path, 'w') as outfile:
+        json.dump(board_dict, outfile)
+
