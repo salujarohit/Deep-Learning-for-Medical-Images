@@ -18,28 +18,20 @@ def fix_rescale(rescale_str):
 
 def hyperparameters_processing(hyperparameters):
 
-    if hyperparameters['optimizer'] == "RMSprop":
-        hyperparameters['optimizer'] = RMSprop
-    elif hyperparameters['optimizer'] == "SGD":
-        hyperparameters['optimizer'] = SGD
-    else:
-        hyperparameters['optimizer'] = Adam
+    str_func_dict = {'dice_coef': dice_coef, 'precision': precision, 'recall': recall, 'f1': f1, 'RMSprop': RMSprop,
+                     'SGD': SGD, 'Adam': Adam, 'dice_loss': dice_coef_loss, 'weighted_loss': weighted_loss}
+    if hyperparameters['optimizer'] in str_func_dict:
+        hyperparameters['optimizer'] = str_func_dict[hyperparameters['optimizer']]
 
     hyperparameters['metrics_func'] = []
     for i, metric in enumerate(hyperparameters['metrics']):
-        if metric == 'dice_coef':
-            hyperparameters['metrics_func'].append(dice_coef)
-        elif metric == 'precision':
-            hyperparameters['metrics_func'].append(precision)
-        elif metric == 'recall':
-            hyperparameters['metrics_func'].append(recall)
-        elif metric == 'f1':
-            hyperparameters['metrics_func'].append(f1)
+        if metric in str_func_dict:
+            hyperparameters['metrics_func'].append(str_func_dict[metric])
         else:
             hyperparameters['metrics_func'].append(metric)
 
-    if hyperparameters['loss'] == 'dice_loss':
-        hyperparameters['loss'] = dice_coef_loss
+    if hyperparameters['loss'] in str_func_dict:
+        hyperparameters['loss'] = str_func_dict[hyperparameters['loss']]
 
     if 'generator' in hyperparameters:
         hyperparameters['generator']['rescale'] = fix_rescale(hyperparameters['generator']['rescale'])
@@ -50,6 +42,19 @@ def hyperparameters_processing(hyperparameters):
         hyperparameters['num_folds'] = 1
 
     return hyperparameters
+
+
+def weighted_loss(weight_map, weight_strength):
+    def weighted_dice_loss(y_true, y_pred):
+        weight_f = K.flatten(weight_map)
+        weight_f = weight_f * weight_strength
+        weight_f = 1 / (weight_f + 1)
+        y_true_f = K.flatten(y_true)
+        y_true_f = y_true_f * weight_f
+        y_pred_f = K.flatten(y_pred)
+        y_pred_f = y_pred_f * weight_f
+        return 1 - dice_coef(y_true_f, y_pred_f)
+    return weighted_dice_loss
 
 
 def dice_coef_loss(y_true, y_pred):
@@ -63,13 +68,21 @@ def dice_coef(y_true, y_pred, smooth=1):
     ref: https://arxiv.org/pdf/1606.04797v1.pdf
     """
     intersection = K.sum(K.abs(y_true * y_pred), axis=-1)
-    return (2. * intersection + smooth) / (K.sum(K.square(y_true), -1) + K.sum(K.square(y_pred),-1) + smooth)
+    return (2. * intersection + smooth) / (K.sum(K.square(y_true), -1) + K.sum(K.square(y_pred), -1) + smooth)
 
 
 def plot_pair(img,mask):
     fig, ax = plt.subplots(1, 2, figsize=(14, 2))
     ax[0].imshow(img,cmap="gray")
     ax[1].imshow(mask, cmap="gray")
+    plt.show()
+
+
+def plot_triplet(img, weight, mask):
+    fig, ax = plt.subplots(1, 3, figsize=(14, 2))
+    ax[0].imshow(img, cmap="gray")
+    ax[1].imshow(weight, cmap="gray")
+    ax[2].imshow(mask, cmap="gray")
     plt.show()
 
 
@@ -92,11 +105,13 @@ def f1(y_true, y_pred):
     recall_value = recall(y_true, y_pred)
     return 2 * ((precision_value * recall_value) / (precision_value + recall_value + K.epsilon()))
 
+
 def get_hyperparameters(task):
     file_name = 'tasks/'+task+'.json'
     file_path = os.path.join(os.getcwd(), file_name)
     with open(file_path) as file:
         return json.load(file)
+
 
 def update_board (hyperparameters, evaluation, task):
     file_name = 'tasks/' + 'board' + '.json'

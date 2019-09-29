@@ -115,9 +115,17 @@ def get_unet(hyperparameters):
         conv9 = BatchNormalization()(conv9)
     conv9 = Activation('relu')(conv9)
     conv10 = Conv2D(hyperparameters['last_layer_units'], (1, 1), activation=hyperparameters['last_layer_activation'])(conv9)
-    model = Model(inputs=[inputs], outputs=[conv10])
+
+    if 'use_weight_maps' in hyperparameters and hyperparameters['use_weight_maps']:
+        weight_input = Input(hyperparameters['input_shape'])
+        model = Model(inputs=[inputs, weight_input], outputs=[conv10])
+        loss = hyperparameters['loss'](weight_input, hyperparameters['weight_strength'])
+    else:
+        model = Model(inputs=[inputs], outputs=[conv10])
+        loss = hyperparameters['loss']
+
     print(model.summary())
-    model.compile(loss=hyperparameters['loss'],
+    model.compile(loss=loss,
                   optimizer=hyperparameters['optimizer'](lr=hyperparameters['lr']),
                   metrics=hyperparameters['metrics_func'])
     return model
