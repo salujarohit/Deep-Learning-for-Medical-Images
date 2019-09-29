@@ -5,14 +5,16 @@
   "batch_norm": true,
   "dropout": 0.5,
   "optimizer": "Adam",
-  "loss": "dice_loss",
+  "loss": "weighted_loss",
   "metrics": ["dice_coef", "precision", "recall"],
   "model": "unet",
   "base": 16,
   "input_shape": [240, 240, 1],
   "data_path": "/Lab1/Lab3/MRI/",
-  "num_folds": 3,
+  "test_size": 0.2,
   "last_layer_units": 1,
   "last_layer_activation": "sigmoid",
+  "use_weight_maps": true,
+  "weight_strength": 1,
   "save_model": true
 }
