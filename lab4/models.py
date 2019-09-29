@@ -146,7 +146,7 @@ def plot_history(hyperparameters, History, task_number, fold_num):
     plt.xlabel("Epochs")
     plt.ylabel("Loss Value")
     plt.legend()
-    result_path = os.path.join(os.path.join(os.getcwd(), 'results'), str(task_number) + str(fold_num) + '_' +
+    result_path = os.path.join(os.path.join(os.getcwd(), 'results'), str(task_number) + '_' + str(fold_num) +
                                '_loss.png')
     fig.savefig(result_path, dpi=fig.dpi)
 
@@ -178,5 +178,5 @@ def plot_history(hyperparameters, History, task_number, fold_num):
 def save_model(model, task_num, fold_num):
     if not os.path.isdir(os.path.join(os.getcwd(), 'models')):
         os.mkdir(os.path.join(os.getcwd(), 'models'))
-    model_path = os.path.join(os.path.join(os.getcwd(), 'models'), str(task_num) + str(fold_num) + '.h5')
+    model_path = os.path.join(os.path.join(os.getcwd(), 'models'), str(task_num) + '_' + str(fold_num) + '.h5')
     model.save(model_path)

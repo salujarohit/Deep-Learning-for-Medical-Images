@@ -15,5 +15,6 @@
   "last_layer_units": 1,
   "last_layer_activation": "sigmoid",
   "use_weight_maps": true,
-  "weight_strength": 1
+  "weight_strength": 1,
+  "save_model": true
 }

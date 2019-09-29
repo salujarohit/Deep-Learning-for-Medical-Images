@@ -13,5 +13,6 @@
   "data_path": "/Lab1/Lab3/MRI/",
   "num_folds": 3,
   "last_layer_units": 1,
-  "last_layer_activation": "sigmoid"
+  "last_layer_activation": "sigmoid",
+  "save_model": true
 }
