@@ -40,6 +40,8 @@ def hyperparameters_processing(hyperparameters):
 
     if "test_size" in hyperparameters:
         hyperparameters['num_folds'] = 1
+    if 'autocontext_step' not in hyperparameters:
+        hyperparameters['autocontext_step'] = 1
 
     return hyperparameters
 

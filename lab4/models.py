@@ -131,7 +131,7 @@ def get_unet(hyperparameters):
     return model
 
 
-def plot_history(hyperparameters, History, task_number, fold_num):
+def plot_history(hyperparameters, History, task_number, s_step, fold_num):
 
     if not os.path.isdir(os.path.join(os.getcwd(), 'results')):
         os.mkdir(os.path.join(os.getcwd(), 'results'))
@@ -146,7 +146,7 @@ def plot_history(hyperparameters, History, task_number, fold_num):
     plt.xlabel("Epochs")
     plt.ylabel("Loss Value")
     plt.legend()
-    result_path = os.path.join(os.path.join(os.getcwd(), 'results'), str(task_number) + '_' + str(fold_num) +
+    result_path = os.path.join(os.path.join(os.getcwd(), 'results'),  str(task_number) + '_task ' + str(s_step) + '_step' + str(fold_num) + '_fold' +
                                '_loss.png')
     fig.savefig(result_path, dpi=fig.dpi)
 
@@ -170,13 +170,38 @@ def plot_history(hyperparameters, History, task_number, fold_num):
             plt.xlabel("Epochs")
             plt.ylabel("Accuracy Value")
             plt.legend()
-            result_path = os.path.join(os.path.join(os.getcwd(), 'results'), str(task_number) + '_' + str(fold_num) +
+            result_path = os.path.join(os.path.join(os.getcwd(), 'results'), str(task_number) + '_task ' + str(s_step) + '_step' + str(fold_num) + '_fold' +
                                        '_' + metric + '.png')
             fig.savefig(result_path, dpi=fig.dpi)
 
 
-def save_model(model, task_num, fold_num):
+def save_model(model, task_number, s_step, fold_num):
     if not os.path.isdir(os.path.join(os.getcwd(), 'models')):
         os.mkdir(os.path.join(os.getcwd(), 'models'))
-    model_path = os.path.join(os.path.join(os.getcwd(), 'models'), str(task_num) + '_' + str(fold_num) + '.h5')
+    model_path = os.path.join(os.path.join(os.getcwd(), 'models'), str(task_number) + '_task ' + str(s_step) + '_step' + str(fold_num) + '_fold' + '.h5')
     model.save(model_path)
+
+
+def save_step_prediction(predictions, s_step):
+    save_path = os.path.join(os.getcwd(), 'models')
+    if not os.path.isdir(save_path):
+        os.mkdir(save_path)
+
+    np.save(os.path.join(save_path, 'posterior_unet_step' + str(s_step) + '.npy'))
+
+
+def load_step_prediction(s_step, fold_num, fold_len, train_shape, test_shape):
+    save_path = os.path.join(os.getcwd(), 'models')
+    if os.path.isfile(os.path.join(save_path, 'posterior_unet_step' + str(s_step - 1) + '.npy')):
+        predictions = np.load(os.path.join(save_path, 'posterior_unet_step' + str(s_step -1) + '.npy'))
+        all_indices = list(np.arange(len(predictions)))
+        test_indices = list(np.arange(fold_num * fold_len, (fold_num + 1) * fold_len))
+        train_indices = list(set(all_indices) - set(test_indices))
+        pred_train = predictions[train_indices]
+        pred_test = predictions[test_indices]
+    else:
+
+        pred_train = np.full(train_shape, .5)
+        pred_test = np.full(test_shape, .5)
+
+    return pred_train, pred_test
