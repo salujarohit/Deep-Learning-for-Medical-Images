@@ -90,7 +90,10 @@ class MyGenerator(Sequence):
 
         y_list = []
         for file_name in batch_y:
-            mask = resize(imread(file_name, as_gray=False), (self.input_shape[0], self.input_shape[1]))
+            mask = imread(file_name, as_gray=False)
+            mask = resize(mask, (self.input_shape[0], self.input_shape[1]), order=0, anti_aliasing=False, preserve_range=True)
+            if max(np.unique(mask)) == 255:
+                mask /= 255
             if self.input_shape[2] == 1:
                 mask = np.expand_dims(mask, axis=3)
             if 'binarize_values' in self.hyperparameters:
