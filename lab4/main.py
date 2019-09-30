@@ -44,4 +44,4 @@ for task in tasks:
 
             y_pred = model.predict(test_data_gen, steps=total_val // hyperparameters['batch_size'])
             model_predictions[(i * total_val):((i + 1) * total_val)] = y_pred
-        save_step_prediction(y_pred, s_step)
+        save_step_prediction(model_predictions, s_step)

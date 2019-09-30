@@ -25,7 +25,9 @@ except:
 
 
 def get_unet(hyperparameters):
-    inputs = Input(hyperparameters['input_shape'])
+    input_shape = hyperparameters['input_shape'] if hyperparameters['autocontext_step'] == 1 \
+        else (hyperparameters['input_shape'][0], hyperparameters['input_shape'][1], 2)
+    inputs = Input(input_shape)
     conv1 = Conv2D(hyperparameters['base'], (3, 3), padding='same')(inputs)
     if hyperparameters['batch_norm']:
         conv1 = BatchNormalization()(conv1)
@@ -186,21 +188,19 @@ def save_step_prediction(predictions, s_step):
     save_path = os.path.join(os.getcwd(), 'models')
     if not os.path.isdir(save_path):
         os.mkdir(save_path)
-
-    np.save(os.path.join(save_path, 'posterior_unet_step' + str(s_step) + '.npy'))
+    np.save(os.path.join(save_path, 'posterior_unet_step' + str(s_step) + '.npy'), predictions)
 
 
 def load_step_prediction(s_step, fold_num, fold_len, train_shape, test_shape):
     save_path = os.path.join(os.getcwd(), 'models')
     if os.path.isfile(os.path.join(save_path, 'posterior_unet_step' + str(s_step - 1) + '.npy')):
-        predictions = np.load(os.path.join(save_path, 'posterior_unet_step' + str(s_step -1) + '.npy'))
+        predictions = np.load(os.path.join(save_path, 'posterior_unet_step' + str(s_step - 1) + '.npy'))
         all_indices = list(np.arange(len(predictions)))
         test_indices = list(np.arange(fold_num * fold_len, (fold_num + 1) * fold_len))
         train_indices = list(set(all_indices) - set(test_indices))
         pred_train = predictions[train_indices]
         pred_test = predictions[test_indices]
     else:
-
         pred_train = np.full(train_shape, .5)
         pred_test = np.full(test_shape, .5)
 
