@@ -25,7 +25,9 @@ except:
 
 
 def get_unet(hyperparameters):
-    inputs = Input(hyperparameters['input_shape'])
+    input_shape = hyperparameters['input_shape'] if hyperparameters['autocontext_step'] == 1 \
+        else (hyperparameters['input_shape'][0], hyperparameters['input_shape'][1], 2)
+    inputs = Input(input_shape)
     conv1 = Conv2D(hyperparameters['base'], (3, 3), padding='same')(inputs)
     if hyperparameters['batch_norm']:
         conv1 = BatchNormalization()(conv1)
@@ -131,7 +133,7 @@ def get_unet(hyperparameters):
     return model
 
 
-def plot_history(hyperparameters, History, task_number, fold_num):
+def plot_history(hyperparameters, History, task_number, s_step, fold_num):
 
     if not os.path.isdir(os.path.join(os.getcwd(), 'results')):
         os.mkdir(os.path.join(os.getcwd(), 'results'))
@@ -146,7 +148,7 @@ def plot_history(hyperparameters, History, task_number, fold_num):
     plt.xlabel("Epochs")
     plt.ylabel("Loss Value")
     plt.legend()
-    result_path = os.path.join(os.path.join(os.getcwd(), 'results'), str(task_number) + '_' + str(fold_num) +
+    result_path = os.path.join(os.path.join(os.getcwd(), 'results'),  str(task_number) + '_step' + str(s_step) + '_fold' + str(fold_num) +
                                '_loss.png')
     fig.savefig(result_path, dpi=fig.dpi)
 
@@ -170,13 +172,41 @@ def plot_history(hyperparameters, History, task_number, fold_num):
             plt.xlabel("Epochs")
             plt.ylabel("Accuracy Value")
             plt.legend()
-            result_path = os.path.join(os.path.join(os.getcwd(), 'results'), str(task_number) + '_' + str(fold_num) +
+            result_path = os.path.join(os.path.join(os.getcwd(), 'results'), str(task_number) + '_step' + str(s_step) + '_fold' + str(fold_num) +
                                        '_' + metric + '.png')
             fig.savefig(result_path, dpi=fig.dpi)
 
 
-def save_model(model, task_num, fold_num):
+def save_model(model, task_number, s_step, fold_num):
     if not os.path.isdir(os.path.join(os.getcwd(), 'models')):
         os.mkdir(os.path.join(os.getcwd(), 'models'))
-    model_path = os.path.join(os.path.join(os.getcwd(), 'models'), str(task_num) + '_' + str(fold_num) + '.h5')
+    model_path = os.path.join(os.path.join(os.getcwd(), 'models'), str(task_number) + '_step' + str(s_step) + '_fold' + str(fold_num) + '.h5')
     model.save(model_path)
+
+
+def save_step_prediction(predictions, s_step):
+    save_path = os.path.join(os.getcwd(), 'models')
+    if not os.path.isdir(save_path):
+        os.mkdir(save_path)
+    np.save(os.path.join(save_path, 'posterior_unet_step' + str(s_step) + '.npy'), predictions)
+
+
+def load_step_prediction(s_step, fold_num, fold_len, idx, batch_size, data,  data_shape):
+    save_path = os.path.join(os.getcwd(), 'models')
+    if os.path.isfile(os.path.join(save_path, 'posterior_unet_step' + str(s_step - 1) + '.npy')):
+        predictions = np.load(os.path.join(save_path, 'posterior_unet_step' + str(s_step - 1) + '.npy'), allow_pickle= True)
+        output_pred = np.zeros(data_shape)
+        if data == "testing":
+            upper_limit = min((fold_num * fold_len) + ((idx + 1) * batch_size), ((fold_num+1) * fold_len))
+            output_indices = list(np.arange((fold_num * fold_len) + (idx * batch_size), upper_limit))
+        else:
+            test_indices = list(np.arange((fold_num * fold_len), ((fold_num+1) * fold_len)))
+            all_indices = list(np.arange(len(predictions)))
+            train_indices = list(set(all_indices) - set(test_indices))
+            output_indices = train_indices[idx * batch_size:(idx + 1) * batch_size]
+        for i, ind in enumerate(output_indices):
+            output_pred[i] = predictions[ind]
+    else:
+        output_pred = np.full(data_shape, .5)
+
+    return output_pred

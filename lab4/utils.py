@@ -40,6 +40,8 @@ def hyperparameters_processing(hyperparameters):
 
     if "test_size" in hyperparameters:
         hyperparameters['num_folds'] = 1
+    if 'autocontext_step' not in hyperparameters:
+        hyperparameters['autocontext_step'] = 1
 
     return hyperparameters
 
@@ -62,13 +64,10 @@ def dice_coef_loss(y_true, y_pred):
 
 
 def dice_coef(y_true, y_pred, smooth=1):
-    """
-    Dice = (2*|X & Y|)/ (|X|+ |Y|)
-         =  2*sum(|A*B|)/(sum(A^2)+sum(B^2))
-    ref: https://arxiv.org/pdf/1606.04797v1.pdf
-    """
-    intersection = K.sum(K.abs(y_true * y_pred), axis=-1)
-    return (2. * intersection + smooth) / (K.sum(K.square(y_true), -1) + K.sum(K.square(y_pred), -1) + smooth)
+    y_true_f = K.flatten(y_true)
+    y_pred_f = K.flatten(y_pred)
+    intersection = K.sum(K.abs(y_true_f * y_pred_f))
+    return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
 
 
 def plot_pair(img,mask):
@@ -87,15 +86,19 @@ def plot_triplet(img, weight, mask):
 
 
 def recall(y_true, y_pred):
-    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+    y_true_f = K.flatten(y_true)
+    y_pred_f = K.flatten(y_pred)
+    true_positives = K.sum(K.round(K.clip(y_true_f * y_pred_f, 0, 1)))
+    possible_positives = K.sum(K.round(K.clip(y_true_f, 0, 1)))
     recall_result = true_positives / (possible_positives + K.epsilon())
     return recall_result
 
 
 def precision(y_true, y_pred):
-    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+    y_true_f = K.flatten(y_true)
+    y_pred_f = K.flatten(y_pred)
+    true_positives = K.sum(K.round(K.clip(y_true_f * y_pred_f, 0, 1)))
+    predicted_positives = K.sum(K.round(K.clip(y_pred_f, 0, 1)))
     precision_result = true_positives / (predicted_positives + K.epsilon())
     return precision_result
 

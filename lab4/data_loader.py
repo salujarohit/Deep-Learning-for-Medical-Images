@@ -13,7 +13,7 @@ try:
 except:
     from tensorflow.python.keras.preprocessing.image import ImageDataGenerator, array_to_img
     from tensorflow.python.keras.utils import Sequence
-
+from models import load_step_prediction
 
 def binarize(img, values=[255]):
     mask = np.zeros(img.shape)
@@ -61,12 +61,16 @@ def get_mask_boundary(masks, radius_dil=2, radius_ero=2):
 
 
 class MyGenerator(Sequence):
-    def __init__(self, image_filenames, mask_filenames, batch_size, input_shape, generator_features, hyperparameters):
+    def __init__(self, image_filenames, mask_filenames, batch_size, input_shape, generator_features, hyperparameters, gen_type, s_step, fold_num, fold_len):
         self.image_filenames, self.mask_filenames = image_filenames, mask_filenames
         self.batch_size = batch_size
         self.input_shape = input_shape
         self.generator_features = generator_features
         self.hyperparameters = hyperparameters
+        self.gen_type = gen_type
+        self.s_step = s_step
+        self.fold_num = fold_num
+        self.fold_len = fold_len
 
     def __len__(self):
         return int(np.ceil(len(self.image_filenames) / float(self.batch_size)))
@@ -80,9 +84,16 @@ class MyGenerator(Sequence):
              batch_x])
         if self.input_shape[2] == 1:
             x = np.expand_dims(x, axis=3)
+        if self.hyperparameters['autocontext_step'] > 1:
+            last_step_pred = load_step_prediction(self.s_step, self.fold_num, self.fold_len, idx, self.batch_size, self.gen_type,  x.shape)
+            x = np.concatenate((x, last_step_pred), axis=-1)
+
         y_list = []
         for file_name in batch_y:
-            mask = resize(imread(file_name, as_gray=False), (self.input_shape[0], self.input_shape[1]))
+            mask = imread(file_name, as_gray=False)
+            mask = resize(mask, (self.input_shape[0], self.input_shape[1]), order=0, anti_aliasing=False, preserve_range=True)
+            if max(np.unique(mask)) == 255:
+                mask /= 255
             if self.input_shape[2] == 1:
                 mask = np.expand_dims(mask, axis=3)
             if 'binarize_values' in self.hyperparameters:
@@ -105,20 +116,20 @@ class MyGenerator(Sequence):
         return combine_generators(image_data_gen, mask_data_gen, mask_boundary_data_gen)
  
 
-def get_data_with_generator_on_the_fly(hyperparameters, x_train, y_train, x_test, y_test):
+def get_data_with_generator_on_the_fly(hyperparameters, x_train, y_train, x_test, y_test, s_step, fold_num, fold_len):
     data_generator = hyperparameters['generator'] if 'generator' in hyperparameters else {}
     training_batch_generator = MyGenerator(x_train, y_train, hyperparameters['batch_size'],
-                                           hyperparameters['input_shape'], data_generator, hyperparameters)
+                                           hyperparameters['input_shape'], data_generator, hyperparameters, "training", s_step, fold_num, fold_len)
     data_generator = hyperparameters['test_generator'] if 'test_generator' in hyperparameters else {}
     validation_batch_generator = MyGenerator(x_test, y_test, hyperparameters['batch_size'],
-                                             hyperparameters['input_shape'], data_generator, hyperparameters)
-    return training_batch_generator, validation_batch_generator, len(y_train), len(y_test)
+                                             hyperparameters['input_shape'], data_generator, hyperparameters, "testing", s_step, fold_num, fold_len)
+    return training_batch_generator, validation_batch_generator
 
 
 def split_data_to_folds(image_names, mask_names, num_folds, test_size=None, shuffle=True):
     if shuffle:
         paired = list(zip(image_names, mask_names))
-        random.shuffle(paired)
+        random.Random(4).shuffle(paired)
         separated = [list(t) for t in zip(*paired)]
         image_names = separated[0]
         mask_names = separated[1]
