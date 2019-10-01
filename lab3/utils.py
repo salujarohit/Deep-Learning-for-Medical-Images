@@ -53,13 +53,10 @@ def dice_coef_loss(y_true, y_pred):
 
 
 def dice_coef(y_true, y_pred, smooth=1):
-    """
-    Dice = (2*|X & Y|)/ (|X|+ |Y|)
-         =  2*sum(|A*B|)/(sum(A^2)+sum(B^2))
-    ref: https://arxiv.org/pdf/1606.04797v1.pdf
-    """
-    intersection = K.sum(K.abs(y_true * y_pred), axis=-1)
-    return (2. * intersection + smooth) / (K.sum(K.square(y_true), -1) + K.sum(K.square(y_pred),-1) + smooth)
+    y_true_f = K.flatten(y_true)
+    y_pred_f = K.flatten(y_pred)
+    intersection = K.sum(K.abs(y_true_f * y_pred_f))
+    return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
 
 
 def plot_pair(img,mask):
@@ -69,24 +66,37 @@ def plot_pair(img,mask):
     plt.show()
 
 
+def plot_triplet(img, weight, mask):
+    fig, ax = plt.subplots(1, 3, figsize=(14, 2))
+    ax[0].imshow(img, cmap="gray")
+    ax[1].imshow(weight, cmap="gray")
+    ax[2].imshow(mask, cmap="gray")
+    plt.show()
+
+
 def recall(y_true, y_pred):
-    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
-    recall = true_positives / (possible_positives + K.epsilon())
-    return recall
+    y_true_f = K.flatten(y_true)
+    y_pred_f = K.flatten(y_pred)
+    true_positives = K.sum(K.round(K.clip(y_true_f * y_pred_f, 0, 1)))
+    possible_positives = K.sum(K.round(K.clip(y_true_f, 0, 1)))
+    recall_result = true_positives / (possible_positives + K.epsilon())
+    return recall_result
 
 
 def precision(y_true, y_pred):
-    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
-    precision = true_positives / (predicted_positives + K.epsilon())
-    return precision
+    y_true_f = K.flatten(y_true)
+    y_pred_f = K.flatten(y_pred)
+    true_positives = K.sum(K.round(K.clip(y_true_f * y_pred_f, 0, 1)))
+    predicted_positives = K.sum(K.round(K.clip(y_pred_f, 0, 1)))
+    precision_result = true_positives / (predicted_positives + K.epsilon())
+    return precision_result
 
 
 def f1(y_true, y_pred):
     precision_value = precision(y_true, y_pred)
     recall_value = recall(y_true, y_pred)
     return 2 * ((precision_value * recall_value) / (precision_value + recall_value + K.epsilon()))
+
 
 def get_hyperparameters(task):
     file_name = 'tasks/'+task+'.json'
