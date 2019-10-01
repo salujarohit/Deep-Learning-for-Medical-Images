@@ -24,13 +24,10 @@ for task in tasks:
         for fold_num, fold in enumerate(folds):
             train_images, train_masks, validation_images, validation_masks = fold
             print("train images", train_images)
-            train_data_gen, test_data_gen, total_train, total_val = get_data_with_generator_on_the_fly(hyperparameters,
-                                                                                                       train_images,
-                                                                                                       train_masks,
-                                                                                                       validation_images,
-                                                                                                       validation_masks,
-                                                                                                       s_step, fold_num,
-                                                                                                       len(validation_images))
+            train_data_gen, test_data_gen = get_data_with_generator_on_the_fly(hyperparameters, train_images,
+                                                                               train_masks, validation_images,
+                                                                               validation_masks, s_step, fold_num,
+                                                                               len(validation_images))
             model = get_unet(hyperparameters)
             # for i in range(10):
             #     batch_x_w, batch_y = train_data_gen.__getitem__(i)
@@ -38,14 +35,14 @@ for task in tasks:
             #     batch_x_w, batch_y = test_data_gen.__getitem__(i)
             #     plot_triplet(batch_x_w[0][0,:,:,0], batch_x_w[1][0,:,:,0], batch_y[0,:,:,0])
             model_history = model.fit_generator(train_data_gen,
-                                                steps_per_epoch=total_train // hyperparameters['batch_size'],
+                                                # steps_per_epoch=total_train // hyperparameters['batch_size'],
                                                 epochs=hyperparameters['epochs'],
-                                                validation_data=test_data_gen,
-                                                validation_steps=total_val // hyperparameters['batch_size'])
+                                                validation_data=test_data_gen)
             plot_history(hyperparameters, model_history, task, s_step, fold_num)
             if 'save_model' in hyperparameters and hyperparameters['save_model']:
                 save_model(model, task, s_step, fold_num)
 
-            y_pred = model.predict(test_data_gen, steps=total_val // hyperparameters['batch_size'])
+            y_pred = model.predict(test_data_gen)
+            total_val = len(test_data_gen.image_filenames)
             model_predictions[(fold_num * total_val):((fold_num + 1) * total_val)] = y_pred
         save_step_prediction(model_predictions, s_step)

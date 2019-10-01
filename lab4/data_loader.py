@@ -123,7 +123,7 @@ def get_data_with_generator_on_the_fly(hyperparameters, x_train, y_train, x_test
     data_generator = hyperparameters['test_generator'] if 'test_generator' in hyperparameters else {}
     validation_batch_generator = MyGenerator(x_test, y_test, hyperparameters['batch_size'],
                                              hyperparameters['input_shape'], data_generator, hyperparameters, "testing", s_step, fold_num, fold_len)
-    return training_batch_generator, validation_batch_generator, len(y_train), len(y_test)
+    return training_batch_generator, validation_batch_generator
 
 
 def split_data_to_folds(image_names, mask_names, num_folds, test_size=None, shuffle=True):

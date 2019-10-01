@@ -192,15 +192,13 @@ def save_step_prediction(predictions, s_step):
 
 
 def load_step_prediction(s_step, fold_num, fold_len, idx, batch_size, data,  data_shape):
-    print(s_step, fold_num, fold_len, idx, batch_size, data, data_shape)
     save_path = os.path.join(os.getcwd(), 'models')
     if os.path.isfile(os.path.join(save_path, 'posterior_unet_step' + str(s_step - 1) + '.npy')):
         predictions = np.load(os.path.join(save_path, 'posterior_unet_step' + str(s_step - 1) + '.npy'), allow_pickle= True)
-        print("predictions",predictions.shape)
         output_pred = np.zeros(data_shape)
-        if data == "test":
-            output_indices = list(np.arange((fold_num * fold_len) + (idx * batch_size), (fold_num * fold_len) + (idx * batch_size)))
-            print(1, output_indices)
+        if data == "testing":
+            upper_limit = min((fold_num * fold_len) + ((idx + 1) * batch_size), ((fold_num+1) * fold_len))
+            output_indices = list(np.arange((fold_num * fold_len) + (idx * batch_size), upper_limit))
         else:
             test_indices = list(np.arange((fold_num * fold_len), ((fold_num+1) * fold_len)))
             all_indices = list(np.arange(len(predictions)))
@@ -208,7 +206,6 @@ def load_step_prediction(s_step, fold_num, fold_len, idx, batch_size, data,  dat
             output_indices = train_indices[idx * batch_size:(idx + 1) * batch_size]
         for i, ind in enumerate(output_indices):
             output_pred[i] = predictions[ind]
-        print("output_pred", output_pred.shape)
     else:
         output_pred = np.full(data_shape, .5)
 
