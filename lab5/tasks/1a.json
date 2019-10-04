@@ -1,0 +1,15 @@
+{
+  "lr": 0.001,
+  "batch_size": 16,
+  "epochs": 100,
+  "dropout": 0.2,
+  "optimizer": "Adam",
+  "loss": "mse",
+  "metrics": ["mae"],
+  "model": "lstm_model",
+  "base": 20,
+  "last_layer_units": 1,
+  "save_model": true,
+  "time_steps": 60,
+  "stateful": true
+}

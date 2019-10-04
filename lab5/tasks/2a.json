@@ -1,0 +1,18 @@
+{
+  "lr": 0.001,
+  "epochs": 50,
+  "dropout": 0.2,
+  "optimizer": "Adam",
+  "loss": "binary_crossentropy",
+  "metrics": ["accuracy"],
+  "model": "lstm_model",
+  "base": 10,
+  "bidirectional_lstm": true,
+  "last_layer_units": 1,
+  "last_layet_activation": "sigmoid",
+  "save_model": true,
+  "time_steps": 3,
+  "use_generator": true,
+  "n_tracts_per_bundle": 20,
+  "stateful": false
+}
