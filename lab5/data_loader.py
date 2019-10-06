@@ -65,16 +65,12 @@ def get_mask_boundary(masks, radius_dil=2, radius_ero=2):
 
 
 class MyGenerator(Sequence):
-    def __init__(self, image_filenames, mask_filenames, batch_size, input_shape, generator_features, hyperparameters, gen_type, s_step, fold_num, fold_len):
+    def __init__(self, image_filenames, mask_filenames, batch_size, input_shape, generator_features, hyperparameters):
         self.image_filenames, self.mask_filenames = image_filenames, mask_filenames
         self.batch_size = batch_size
         self.input_shape = input_shape
         self.generator_features = generator_features
         self.hyperparameters = hyperparameters
-        self.gen_type = gen_type
-        self.s_step = s_step
-        self.fold_num = fold_num
-        self.fold_len = fold_len
 
     def __len__(self):
         return int(np.ceil(len(self.image_filenames) / float(self.batch_size)))
@@ -88,9 +84,6 @@ class MyGenerator(Sequence):
              batch_x])
         if self.input_shape[2] == 1:
             x = np.expand_dims(x, axis=3)
-        if self.hyperparameters['autocontext_step'] > 1:
-            last_step_pred = load_step_prediction(self.s_step, self.fold_num, self.fold_len, idx, self.batch_size, self.gen_type,  x.shape)
-            x = np.concatenate((x, last_step_pred), axis=-1)
 
         y_list = []
         for file_name in batch_y:
@@ -112,61 +105,25 @@ class MyGenerator(Sequence):
         image_data_gen = data_gen.flow(x, batch_size=self.batch_size, seed=100)
         mask_data_gen = data_gen.flow(y, batch_size=self.batch_size, seed=100)
 
-        mask_boundary_data_gen = None
-        if 'use_weight_maps' in self.hyperparameters and self.hyperparameters['use_weight_maps']:
-            mask_boundaries = get_mask_boundary(y)
-            mask_boundary_data_gen = data_gen.flow(mask_boundaries, batch_size=self.batch_size, seed=100)
-
-        return combine_generators(image_data_gen, mask_data_gen, mask_boundary_data_gen)
+        return combine_generators(image_data_gen, mask_data_gen)
  
 
-def get_data_with_generator_on_the_fly(hyperparameters, x_train, y_train, x_test, y_test, s_step, fold_num, fold_len):
-    data_generator = hyperparameters['generator'] if 'generator' in hyperparameters else {}
-    training_batch_generator = MyGenerator(x_train, y_train, hyperparameters['batch_size'],
-                                           hyperparameters['input_shape'], data_generator, hyperparameters, "training", s_step, fold_num, fold_len)
-    data_generator = hyperparameters['test_generator'] if 'test_generator' in hyperparameters else {}
-    validation_batch_generator = MyGenerator(x_test, y_test, hyperparameters['batch_size'],
-                                             hyperparameters['input_shape'], data_generator, hyperparameters, "testing", s_step, fold_num, fold_len)
-    return training_batch_generator, validation_batch_generator
-
-
-def split_data_to_folds(image_names, mask_names, num_folds, test_size=None, shuffle=True):
-    if shuffle:
-        paired = list(zip(image_names, mask_names))
-        random.Random(4).shuffle(paired)
-        separated = [list(t) for t in zip(*paired)]
-        image_names = separated[0]
-        mask_names = separated[1]
-    image_names = np.array(image_names)
-    mask_names = np.array(mask_names)
-    if num_folds == 1:
-        training_images, validation_images, training_masks, validation_masks = train_test_split(image_names, mask_names,
-                                                                                                test_size=test_size,
-                                                                                                random_state=1)
-        yield training_images, training_masks, validation_images, validation_masks
-    else:
-        num_data_per_fold = len(image_names) // num_folds
-        images_indices = list(np.arange(len(image_names)))
-        for i in range(0, num_folds):
-            validation_indices = list(np.arange(i * num_data_per_fold, (i + 1) * num_data_per_fold))
-            training_indices = list(set(images_indices) - set(validation_indices))
-            validation_images = image_names[validation_indices]
-            validation_masks = mask_names[validation_indices]
-            training_images = image_names[training_indices]
-            training_masks = mask_names[training_indices]
-            yield training_images, training_masks, validation_images, validation_masks
-
-
-def get_folds(hyperparameters):
+def get_data_with_generator_on_the_fly(hyperparameters):
     image_path = os.path.join(os.getcwd(), os.path.join(hyperparameters['data_path'], 'Image'))
     mask_path = os.path.join(os.getcwd(), os.path.join(hyperparameters['data_path'], 'Mask'))
     image_names = [os.path.join(image_path, file) for file in os.listdir(image_path)]
     mask_names = [os.path.join(mask_path, file) for file in os.listdir(mask_path)]
     image_names.sort()
     mask_names.sort()
-    test_size = None if 'test_size' not in hyperparameters else hyperparameters['test_size']
-    folds = split_data_to_folds(image_names, mask_names, hyperparameters['num_folds'], test_size=test_size)
-    return folds
+    x_train, x_test, y_train, y_test = train_test_split(image_names, mask_names, test_size=hyperparameters['test_size'],
+                                                        random_state=1)
+    data_generator = hyperparameters['generator'] if 'generator' in hyperparameters else {}
+    training_batch_generator = MyGenerator(x_train, y_train, hyperparameters['batch_size'],
+                                           hyperparameters['input_shape'], data_generator, hyperparameters)
+    data_generator = hyperparameters['test_generator'] if 'test_generator' in hyperparameters else {}
+    validation_batch_generator = MyGenerator(x_test, y_test, hyperparameters['batch_size'],
+                                             hyperparameters['input_shape'], data_generator, hyperparameters)
+    return training_batch_generator, validation_batch_generator
 
 
 def task1_loader(hyperparameters):
@@ -235,14 +192,18 @@ class MyBatchGenerator(Sequence):
             yb[s] = self.y[index]
         return Xb, yb
 
+
 def task2_loader(hyperparameters):
     dataPath = '/Lab1/Lab5/HCP_lab/'
     train_subjects_list = ['599469', '599671', '601127'] # your choice of 3 training subjects
     val_subjects_list = ['613538']# your choice of 1 validation subjects
     bundles_list = ['CST_left', 'CST_right']
-    X_train, y_train = load_streamlines(dataPath, train_subjects_list, bundles_list, hyperparameters['n_tracts_per_bundle'])
-    X_val, y_val = load_streamlines(dataPath, val_subjects_list, bundles_list, hyperparameters['n_tracts_per_bundle'])
-    return X_train, y_train, X_val, y_val
+    x_train, y_train = load_streamlines(dataPath, train_subjects_list, bundles_list, hyperparameters['n_tracts_per_bundle'])
+    x_val, y_val = load_streamlines(dataPath, val_subjects_list, bundles_list, hyperparameters['n_tracts_per_bundle'])
+    train_data_generator = MyBatchGenerator(x_train, y_train, batch_size=1)
+    test_data_generator = MyBatchGenerator(x_val, y_val, batch_size=1)
+    return train_data_generator, test_data_generator
+
 
 def load_streamlines(dataPath, subject_ids, bundles, n_tracts_per_bundle):
     X = []
@@ -274,3 +235,5 @@ def get_data(task_num, hyperparameter):
         return task1_loader(hyperparameter)
     elif task_num == "2a":
         return task2_loader(hyperparameter)
+    elif task_num == "3a":
+        return get_data_with_generator_on_the_fly(hyperparameter)

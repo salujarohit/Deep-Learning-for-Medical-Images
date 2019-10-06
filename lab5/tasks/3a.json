@@ -1,0 +1,19 @@
+{
+  "lr": 0.00001,
+  "batch_size": 8,
+  "epochs": 100,
+  "batch_norm": true,
+  "dropout": 0.5,
+  "optimizer": "Adam",
+  "loss": "dice_loss",
+  "metrics": ["dice_coef"],
+  "model": "unet_with_lstm",
+  "base": 16,
+  "input_shape": [240, 240, 1],
+  "data_path": "/Lab1/Lab3/MRI/",
+  "last_layer_units": 1,
+  "last_layer_activation": "sigmoid",
+  "test_size": 0.2,
+  "save_model": true,
+  "use_generator": true
+}
