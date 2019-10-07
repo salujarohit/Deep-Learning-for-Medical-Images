@@ -7,7 +7,7 @@ from data_loader import load_data
 # tf.config.gpu.set_per_process_memory_growth(True)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-t", "--task", type=str, default="5a",
+parser.add_argument("-t", "--task", type=str, default="7",
                     help="Please enter tasks' numbers in a string separated by comma")
 
 args = parser.parse_args()
@@ -16,6 +16,11 @@ for task in tasks:
     hyperparameters = get_hyperparameters(task)
     hyperparameters = hyperparameters_processing(hyperparameters)
     train_data_gen, test_data_gen, total_train, total_val = load_data(hyperparameters)
+    for i in range(10):
+        batch_x, batch_y = next(train_data_gen)
+        plot_pair(batch_x[0,:,:,0], batch_y[0,:,:,0])
+        batch_x, batch_y = next(test_data_gen)
+        plot_pair(batch_x[0,:,:,0], batch_y[0,:,:,0])
     model = get_unet(hyperparameters)
     model_history = model.fit_generator(train_data_gen,
                                         steps_per_epoch=total_train // hyperparameters['batch_size'],
