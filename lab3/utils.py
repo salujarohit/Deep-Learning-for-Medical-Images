@@ -41,9 +41,9 @@ def hyperparameters_processing(hyperparameters):
     if hyperparameters['loss'] == 'dice_loss':
         hyperparameters['loss'] = dice_coef_loss
 
-    if 'generator' in hyperparameters:
+    if 'generator' in hyperparameters and 'rescale' in hyperparameters['generator']:
         hyperparameters['generator']['rescale'] = fix_rescale(hyperparameters['generator']['rescale'])
-    if 'test_generator' in hyperparameters:
+    if 'test_generator' in hyperparameters and 'rescale' in hyperparameters['test_generator']:
         hyperparameters['test_generator']['rescale'] = fix_rescale(hyperparameters['test_generator']['rescale'])
     return hyperparameters
 

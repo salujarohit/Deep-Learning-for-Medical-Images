@@ -17,12 +17,10 @@
   "binarize_values": [251, 156],
   "unify_dict": {"156": "255", "251": "255" },
   "generator": {
-    "rescale": "1.0 / 255.0 ",
     "rotation_range": 10,
     "width_shift_range": 0.1,
     "height_shift_range": 0.1,
     "horizontal_flip": true,
     "zoom_range": 0.2
-  },
-  "test_generator": {"rescale": "1.0 / 255.0"}
+  }
 }
