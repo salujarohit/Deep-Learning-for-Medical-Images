@@ -14,5 +14,6 @@
   "test_size": 0.2,
   "last_layer_units": 1,
   "last_layer_activation": "sigmoid",
-  "binarize_values": [255]
+  "binarize_values": [255],
+  "data_in_fly": true
 }
