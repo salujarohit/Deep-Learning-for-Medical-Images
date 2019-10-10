@@ -231,9 +231,9 @@ def load_streamlines(dataPath, subject_ids, bundles, n_tracts_per_bundle):
 
 
 def get_data(task_num, hyperparameter):
-    if task_num == "1a":
+    if task_num == "1a" or task_num == "1b":
         return task1_loader(hyperparameter)
-    elif task_num == "2a":
+    elif task_num == "2a" or task_num == "2b":
         return task2_loader(hyperparameter)
     elif task_num == "3a":
         return get_data_with_generator_on_the_fly(hyperparameter)
