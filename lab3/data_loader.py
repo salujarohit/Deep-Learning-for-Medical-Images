@@ -97,8 +97,12 @@ def combine_generators(gen1, gen2):
     while True:
         batch_x = next(gen1)
         batch_y = next(gen2)
-        yield batch_x, batch_y
+        yield (batch_x, batch_y)
 
+def combine_generators_with_index(gen1, gen2):
+    batch_x = next(gen1)
+    batch_y = next(gen2)
+    return batch_x, batch_y
 
 def get_data_with_generator(hyperparameters):
     x_train, x_test, y_train, y_test = get_data(hyperparameters)
@@ -173,7 +177,7 @@ class MyGenerator(Sequence):
         image_data_gen = data_gen.flow(x, batch_size=self.batch_size, seed=100)
         mask_data_gen = data_gen.flow(y, batch_size=self.batch_size, seed=100)
 
-        return combine_generators(image_data_gen, mask_data_gen)
+        return combine_generators_with_index(image_data_gen, mask_data_gen)
 
 
 def get_data_with_generator_on_the_fly(hyperparameters):

@@ -42,9 +42,9 @@ def hyperparameters_processing(task, hyperparameters):
         hyperparameters['num_folds'] = 1
     if 'autocontext_step' not in hyperparameters:
         hyperparameters['autocontext_step'] = 1
-    if task == "1a":
+    if task == "1a" or task == "1b":
         hyperparameters['batch_shape'] = (hyperparameters['batch_size'], hyperparameters['time_steps'], 1)
-    elif task == "2a":
+    elif task == "2a" or task =="2b":
         hyperparameters['input_shape'] = (None, hyperparameters['time_steps'])
     return hyperparameters
 

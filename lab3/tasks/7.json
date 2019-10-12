@@ -1,5 +1,5 @@
 {
-  "lr": 0.0001,
+  "lr": 0.00001,
   "batch_size": 8,
   "epochs": 150,
   "batch_norm": true,
@@ -15,11 +15,5 @@
   "last_layer_units": 1,
   "last_layer_activation": "sigmoid",
   "binarize_values": [255],
-  "generator": {
-    "rotation_range": 10,
-    "width_shift_range": 0.1,
-    "height_shift_range": 0.1,
-    "horizontal_flip": true,
-    "zoom_range": 0.2
-  }
+  "data_in_fly": true
 }
