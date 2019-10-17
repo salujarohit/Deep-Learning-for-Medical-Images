@@ -137,9 +137,9 @@ def plot_history(hyperparameters, history, task_number, step_num =None, fold_num
     if not os.path.isdir(os.path.join(os.getcwd(), 'results')):
         os.mkdir(os.path.join(os.getcwd(), 'results'))
     task_path = str(task_number)
-    if step_num:
+    if step_num is not None:
         task_path += '_step' + str(step_num)
-    if fold_num:
+    if fold_num is not None:
         task_path += '_fold' + str(fold_num)
 
     fig = plt.figure(figsize=(4, 4))
@@ -186,9 +186,9 @@ def save_model(model, task_number, step_num=None, fold_num=None):
         os.mkdir(os.path.join(os.getcwd(), 'models'))
 
     task_path = str(task_number)
-    if step_num:
+    if step_num is not None:
         task_path += '_step' + str(step_num)
-    if fold_num:
+    if fold_num is not None:
         task_path += '_fold' + str(fold_num)
     model_path = os.path.join(os.path.join(os.getcwd(), 'models'), task_path + '.h5')
     model.save(model_path)

@@ -15,5 +15,6 @@
   "last_layer_units": 1,
   "last_layer_activation": "sigmoid",
   "threshold": 200,
-  "save_model": true
+  "save_model": true,
+  "shuffle": true
 }
