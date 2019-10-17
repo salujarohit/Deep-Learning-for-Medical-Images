@@ -3,8 +3,9 @@ import argparse
 
 import scipy.misc
 import numpy as np
-
-from utils import load_case
+import os
+import nibabel as nib
+# from utils import load_case
 
 # Constants
 DEFAULT_KIDNEY_COLOR = [255, 0, 0]
@@ -14,6 +15,18 @@ DEFAULT_HU_MIN = -512
 DEFAULT_OVERLAY_ALPHA = 0.3
 DEFAULT_PLANE = "axial"
 
+def load_case(cid):
+    data_path = '/project_data_interpolated/'
+    img_name =''
+    mask_name = ''
+    for file in os.listdir(data_path):
+        if str(cid) in file and 'imaging' in file:
+            img_name = file
+        elif str(cid) in file and 'segmentation' in file:
+            mask_name = file
+    img = nib.load(os.path.join(data_path, img_name))
+    mask = nib.load(os.path.join(data_path, mask_name))
+    return img, mask
 
 def hu_to_grayscale(volume, hu_min, hu_max):
     # Clip at max and min values if specified

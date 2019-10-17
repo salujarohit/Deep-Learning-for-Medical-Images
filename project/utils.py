@@ -1,69 +1,3 @@
-from pathlib import Path
-
-import nibabel as nib
-import os
-#
-# def get_full_case_id(cid):
-#     try:
-#         cid = int(cid)
-#         case_id = "case_{:05d}".format(cid)
-#     except ValueError:
-#         case_id = cid
-#
-#     return case_id
-#
-#
-# def get_case_path(cid):
-#     # Resolve location where data should be living
-#     data_path =  Path("/project_data")
-#     if not data_path.exists():
-#         raise IOError(
-#             "Data path, {}, could not be resolved".format(str(data_path))
-#         )
-#
-#     # Get case_id from provided cid
-#     case_id = get_full_case_id(cid)
-#
-#     # Make sure that case_id exists under the data_path
-#     case_path = data_path / case_id
-#     if not case_path.exists():
-#         raise ValueError(
-#             "Case could not be found \"{}\"".format(case_path.name)
-#         )
-#
-#     return case_path
-#
-#
-# def load_volume(cid):
-#     case_path = get_case_path(cid)
-#     vol = nib.load(str(case_path / "imaging.nii.gz"))
-#     return vol
-#
-#
-# def load_segmentation(cid):
-#     case_path = get_case_path(cid)
-#     seg = nib.load(str(case_path / "segmentation.nii.gz"))
-#     return seg
-#
-#
-# def load_case(cid):
-#     vol = load_volume(cid)
-#     seg = load_segmentation(cid)
-#     return vol, seg
-#
-# def load_case(cid):
-#     data_path = '/project_data_interpolated/'
-#     img_name =''
-#     mask_name = ''
-#     for file in os.listdir(data_path):
-#         if str(cid) in file and 'imaging' in file:
-#             img_name = file
-#         elif str(cid) in file and 'segmentation' in file:
-#             mask_name = file
-#     img = nib.load(os.path.join(data_path, img_name))
-#     mask = nib.load(os.path.join(data_path, mask_name))
-#     return img, mask
-
 try:
     from tensorflow.keras.optimizers import Adam, SGD, RMSprop
     import tensorflow.keras.backend as K
@@ -74,6 +8,7 @@ import matplotlib.pyplot as plt
 import json
 import os
 
+
 def fix_rescale(rescale_str):
     rescale_list = rescale_str.split('/')
     if len(rescale_list) > 1:
@@ -82,27 +17,30 @@ def fix_rescale(rescale_str):
         return float(rescale_str)
 
 
-def hyperparameters_processing(hyperparameters):
-
-    str_func_dict = {'dice_coef': dice_coef, 'precision': precision, 'recall': recall, 'f1': f1, 'RMSprop': RMSprop,
-                     'SGD': SGD, 'Adam': Adam, 'dice_loss': dice_coef_loss, 'weighted_loss': weighted_loss}
-    if hyperparameters['optimizer'] in str_func_dict:
-        hyperparameters['optimizer'] = str_func_dict[hyperparameters['optimizer']]
-
-    hyperparameters['metrics_func'] = []
-    for i, metric in enumerate(hyperparameters['metrics']):
-        if metric in str_func_dict:
-            hyperparameters['metrics_func'].append(str_func_dict[metric])
-        else:
-            hyperparameters['metrics_func'].append(metric)
-
-    if hyperparameters['loss'] in str_func_dict:
-        hyperparameters['loss'] = str_func_dict[hyperparameters['loss']]
-
-    if hyperparameters.get('generator') and hyperparameters['generator'].get('rescale'):
-        hyperparameters['generator']['rescale'] = fix_rescale(hyperparameters['generator']['rescale'])
-
-    return hyperparameters
+def process_task_parameters(task_parameters):
+    if task_parameters.get('train_parameters'):
+        train_parameters = task_parameters['train_parameters']
+    
+        str_func_dict = {'dice_coef': dice_coef, 'precision': precision, 'recall': recall, 'f1': f1, 'RMSprop': RMSprop,
+                         'SGD': SGD, 'Adam': Adam, 'dice_loss': dice_coef_loss, 'weighted_loss': weighted_loss,
+                         'competition_dice_coef': competition_dice_coef}
+        if train_parameters['optimizer'] in str_func_dict:
+            train_parameters['optimizer'] = str_func_dict[train_parameters['optimizer']]
+    
+        train_parameters['metrics_func'] = []
+        for i, metric in enumerate(train_parameters['metrics']):
+            if metric in str_func_dict:
+                train_parameters['metrics_func'].append(str_func_dict[metric])
+            else:
+                train_parameters['metrics_func'].append(metric)
+    
+        if train_parameters['loss'] in str_func_dict:
+            train_parameters['loss'] = str_func_dict[train_parameters['loss']]
+    
+        if train_parameters.get('generator') and train_parameters['generator'].get('rescale'):
+            train_parameters['generator']['rescale'] = fix_rescale(train_parameters['generator']['rescale'])
+        task_parameters['train_parameters'] = train_parameters
+    return task_parameters
 
 
 def weighted_loss(weight_map, weight_strength):
@@ -127,6 +65,34 @@ def dice_coef(y_true, y_pred, smooth=1):
     y_pred_f = K.flatten(y_pred)
     intersection = K.sum(K.abs(y_true_f * y_pred_f))
     return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
+
+
+def competition_dice_coef(y_true, y_pred):
+    y_pred = K.argmax(y_pred, axis=-1)
+    y_true = K.argmax(y_true, axis=-1)
+    try:
+        # Compute tumor+kidney Dice
+        tk_pd = K.greater(y_pred, 0)
+        tk_gt = K.greater(y_true, 0)
+        intersection = K.all(K.stack([tk_gt, tk_pd], axis=3), axis=3)
+        tk_dice = 2 * K.sum(K.cast(intersection, dtype='float32')) / (
+                K.sum(K.cast(tk_pd, dtype='float32')) + K.sum(K.cast(tk_gt, dtype='float32'))
+        )
+    except ZeroDivisionError:
+        return 0
+
+    try:
+        # Compute tumor Dice
+        tu_pd = K.greater(y_pred, 1)
+        tu_gt = K.greater(y_true, 1)
+        intersection = K.all(K.stack([tu_pd, tu_gt], axis=3), axis=3)
+        tu_dice = 2 * K.sum(K.cast(intersection, dtype='float32')) / (
+                K.sum(K.cast(tu_pd, dtype='float32')) + K.sum(K.cast(tu_gt, dtype='float32'))
+        )
+
+    except ZeroDivisionError:
+        return tk_dice / 2.0
+    return (tk_dice+tu_dice)/ 2.0
 
 def recall(y_true, y_pred):
     y_true_f = K.flatten(y_true)
@@ -167,12 +133,12 @@ def plot_triplet(img, weight, mask):
     plt.show()
 
 
-def get_hyperparameters(task):
+def get_task_parameters(task):
     file_name = 'tasks/'+task+'.json'
     file_path = os.path.join(os.getcwd(), file_name)
     with open(file_path) as file:
-        hyperparameters = json.load(file)
-        return hyperparameters_processing(hyperparameters)
+        task_parameters = json.load(file)
+        return process_task_parameters(task_parameters)
 
 
 def update_board (hyperparameters, evaluation, task):
