@@ -4,6 +4,7 @@ try:
 except:
     from tensorflow.python.keras.optimizers import Adam, SGD, RMSprop
     import tensorflow.python.keras.backend as K
+
 import matplotlib.pyplot as plt
 import json
 import os
@@ -23,7 +24,7 @@ def process_task_parameters(task_parameters):
     
         str_func_dict = {'dice_coef': dice_coef, 'precision': precision, 'recall': recall, 'f1': f1, 'RMSprop': RMSprop,
                          'SGD': SGD, 'Adam': Adam, 'dice_loss': dice_coef_loss, 'weighted_loss': weighted_loss,
-                         'competition_dice_coef': competition_dice_coef}
+                         'competition_dice_coef': competition_dice_coef, 'competition_dice_loss': competition_dice_loss}
         if train_parameters['optimizer'] in str_func_dict:
             train_parameters['optimizer'] = str_func_dict[train_parameters['optimizer']]
     
@@ -67,32 +68,60 @@ def dice_coef(y_true, y_pred, smooth=1):
     return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
 
 
-def competition_dice_coef(y_true, y_pred):
-    y_pred = K.argmax(y_pred, axis=-1)
-    y_true = K.argmax(y_true, axis=-1)
-    try:
-        # Compute tumor+kidney Dice
-        tk_pd = K.greater(y_pred, 0)
-        tk_gt = K.greater(y_true, 0)
-        intersection = K.all(K.stack([tk_gt, tk_pd], axis=3), axis=3)
-        tk_dice = 2 * K.sum(K.cast(intersection, dtype='float32')) / (
-                K.sum(K.cast(tk_pd, dtype='float32')) + K.sum(K.cast(tk_gt, dtype='float32'))
-        )
-    except ZeroDivisionError:
-        return 0
+def competition_dice_loss(y_true, y_pred):
+    return 1-competition_dice_coef(y_true, y_pred)
 
-    try:
+
+# def competition_dice_coef(y_true, y_pred, smooth=1):
+#     y_pred = K.argmax(y_pred, axis=-1)
+#     y_true = K.argmax(y_true, axis=-1)
+#     # try:
+#     # Compute tumor+kidney Dice
+#     tk_pd = K.greater(y_pred, 0)
+#     tk_gt = K.greater(y_true, 0)
+#     intersection = K.all(K.stack([tk_gt, tk_pd], axis=3), axis=3)
+#     tk_dice = (2 * K.sum(K.cast(intersection, K.floatx())) + smooth)/ (
+#             K.sum(K.cast(tk_pd, K.floatx())) + K.sum(K.cast(tk_gt, K.floatx())) + smooth
+#     )
+#     # except ZeroDivisionError:
+#     #     return 0
+#
+#     # try:
+#         # Compute tumor Dice
+#     tu_pd = K.greater(y_pred, 1)
+#     tu_gt = K.greater(y_true, 1)
+#     intersection = K.all(K.stack([tu_pd, tu_gt], axis=3), axis=3)
+#     tu_dice = (2 * K.sum(K.cast(intersection, K.floatx())) + smooth)/ (
+#             K.sum(K.cast(tu_pd, K.floatx())) + K.sum(K.cast(tu_gt, K.floatx())) + smooth
+#     )
+#     # except ZeroDivisionError:
+#     #     return tk_dice / 2.0
+#     return (tk_dice+tu_dice) / 2.0
+
+def competition_dice_coef(y_true, y_pred, smooth=1):
+    # try:
+    # Compute tumor+kidney Dice
+    tk_pd = K.flatten(y_pred[:,:,:,1:3])
+    tk_gt = K.flatten(y_true[:,:,:,1:3])
+    intersection = K.sum(K.abs(tk_gt * tk_pd))
+    tk_dice = (2. * intersection + smooth) / (
+            K.sum(tk_pd) + K.sum(tk_gt) + smooth
+    )
+    # except ZeroDivisionError:
+    #     return 0
+
+    # try:
         # Compute tumor Dice
-        tu_pd = K.greater(y_pred, 1)
-        tu_gt = K.greater(y_true, 1)
-        intersection = K.all(K.stack([tu_pd, tu_gt], axis=3), axis=3)
-        tu_dice = 2 * K.sum(K.cast(intersection, dtype='float32')) / (
-                K.sum(K.cast(tu_pd, dtype='float32')) + K.sum(K.cast(tu_gt, dtype='float32'))
-        )
+    tu_pd = K.flatten(y_pred[:,:,:,2:3])
+    tu_gt = K.flatten(y_true[:,:,:,2:3])
+    intersection = K.sum(K.abs(tu_gt * tu_pd))
+    tu_dice = (2. * intersection + smooth) / (
+            K.sum(tu_pd) + K.sum(tu_gt) + smooth
+    )
+    # except ZeroDivisionError:
+    #     return tk_dice / 2.0
+    return (tk_dice+tu_dice) / 2.0
 
-    except ZeroDivisionError:
-        return tk_dice / 2.0
-    return (tk_dice+tu_dice)/ 2.0
 
 def recall(y_true, y_pred):
     y_true_f = K.flatten(y_true)
