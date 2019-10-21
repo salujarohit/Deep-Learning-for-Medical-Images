@@ -1,7 +1,7 @@
 import argparse
-from utils import get_task_parameters, plot_pair, plot_triplet
-from models import get_unet, plot_history, save_model, save_step_prediction, plot_loss
-from dataloader import MyDataloader
+from pytorch_utils import get_task_parameters, plot_pair, plot_triplet
+from pytorch_models import get_unet, plot_history, save_model, save_step_prediction, plot_loss
+from pytorch_dataloader import MyDataloader
 from data_processing import PreProcessing
 import torch
 

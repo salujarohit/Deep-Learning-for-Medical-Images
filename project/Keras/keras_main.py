@@ -137,7 +137,7 @@ class Simulation:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--task", type=str, default="0",
+    parser.add_argument("-t", "--task", type=str, default="1h",
                         help="Please enter tasks' numbers in a string separated by comma")
 
     args = parser.parse_args()
