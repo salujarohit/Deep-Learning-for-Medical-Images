@@ -86,7 +86,8 @@ class PreProcessing:
             vol_ims = self.hu_to_grayscale(vol)
 
             for j in range(vol_ims.shape[0]):
-                if np.max(seg[j]) != 0:
+                #extracting only images that have tumor
+                if np.max(seg[j]) == 2: #np.max(seg[j]) != 0:
                     file_path = image_path / ("{}_{:05d}.png".format(i, j))
                     scipy.misc.imsave(str(file_path), vol_ims[j])
                     file_path = mask_path / ("{}_{:05d}.png".format(i, j))
