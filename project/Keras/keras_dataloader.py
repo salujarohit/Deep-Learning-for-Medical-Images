@@ -203,3 +203,75 @@ class DataLoader:
 
         return training_batch_generator, validation_batch_generator
 
+
+class MyPredictionGenerator(Sequence):
+    def __init__(self, hyperparameters, step_num=None, fold_num=None, generator_type="testing", len=90):
+        self.hyperparameters = hyperparameters
+        self.step_num = step_num
+        self.fold_num = fold_num
+        image_path = os.path.join(os.getcwd(), os.path.join(self.hyperparameters['data_path'], 'test_images'))
+        self.image_filenames = np.array([os.path.join(image_path, file) for file in os.listdir(image_path)])
+        self.image_filenames.sort()
+        self.len = len
+
+    def __len__(self):
+        return int(self.len)
+
+    def normalize(self,image):
+        pass
+
+
+    def get_case_indices(self, case_id):
+        indices = []
+        for i,image_name in enumerate(self.image_filenames):
+            if case_id in image_name:
+                indices.append(i)
+        return indices
+    # @staticmethod
+    # def load_step_prediction(s_step, fold_num, fold_len, idx, batch_size, generator_type, data_shape):
+    #     save_path = os.path.join(os.getcwd(), 'models')
+    #     if os.path.isfile(os.path.join(save_path, 'posterior_unet_step' + str(s_step - 1) + '.npy')):
+    #         predictions = np.load(os.path.join(save_path, 'posterior_unet_step' + str(s_step - 1) + '.npy'),
+    #                               allow_pickle=True)
+    #         output_pred = np.zeros(data_shape)
+    #         if generator_type == "testing":
+    #             upper_limit = min((fold_num * fold_len) + ((idx + 1) * batch_size), ((fold_num + 1) * fold_len))
+    #             output_indices = list(np.arange((fold_num * fold_len) + (idx * batch_size), upper_limit))
+    #         else:
+    #             test_indices = list(np.arange((fold_num * fold_len), ((fold_num + 1) * fold_len)))
+    #             all_indices = list(np.arange(len(predictions)))
+    #             train_indices = list(set(all_indices) - set(test_indices))
+    #             output_indices = train_indices[idx * batch_size:(idx + 1) * batch_size]
+    #         for i, ind in enumerate(output_indices):
+    #             output_pred[i] = predictions[ind]
+    #     else:
+    #         output_pred = np.full(data_shape, .5)
+    #     return output_pred
+
+    def __getitem__(self, idx):
+        idx = str(idx).zfill(5)
+        indices = self.get_case_indices(idx)
+        if len(indices) == 0:
+            return None, None
+        batch_x = self.image_filenames[indices]
+        original_shape = imread(batch_x[0]).shape
+        x = np.array(
+            [resize(imread(file), (self.hyperparameters['input_shape'][0], self.hyperparameters['input_shape'][0])) for
+             file in batch_x])
+
+        if self.hyperparameters['input_shape'][2] == 1:
+            x = np.expand_dims(x, axis=3)
+
+        # if self.hyperparameters.get('autocontext_step'):
+        #     self.hyperparameters['fold_len'] = len(self.image_filenames) // self.hyperparameters['folds']
+        #     last_step_pred = self.load_step_prediction(self.step_num,
+        #                                                self.fold_num, self.hyperparameters['fold_len'],
+        #                                                idx, self.hyperparameters['batch_size'], self.generator_type,
+        #                                                x.shape)
+        #     x = np.concatenate((x, last_step_pred), axis=-1)
+
+        return x, original_shape
+
+
+
+

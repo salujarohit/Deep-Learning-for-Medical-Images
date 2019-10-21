@@ -1,9 +1,8 @@
 import argparse
-from Pytorch.utils import get_task_parameters, plot_pair, plot_triplet
-from Pytorch.models import get_unet, plot_history, save_model, save_step_prediction, plot_loss
-from Pytorch.dataloader import MyDataloader
-import os
-from Pytorch.data_processing import PreProcessing
+from utils import get_task_parameters, plot_pair, plot_triplet
+from models import get_unet, plot_history, save_model, save_step_prediction, plot_loss
+from dataloader import MyDataloader
+from data_processing import PreProcessing
 import torch
 
 class Simulation:

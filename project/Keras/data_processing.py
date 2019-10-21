@@ -18,14 +18,12 @@ class PreProcessing:
     def set_destination(self, destination):
         self.destination = destination
 
-    def load_segmentation(self, case_id):
+    def load_volume(self, case_id):
         case_id = str(case_id).zfill(5)
         img_name = ''
-        mask_name = ''
         for file in os.listdir(self.source):
             if str(case_id) in file and 'imaging' in file:
                 img_name = file
-
         img = nib.load(os.path.join(self.source, img_name))
         return img
 
@@ -102,17 +100,17 @@ class PreProcessing:
             raise ValueError("Source directory doesn't exist")
 
         _ = self.create_dir(self.destination)
-        image_path = self.destination+'Image'
+        image_path = self.destination+'test_images'
         image_path = self.create_dir(image_path)
 
         for i in range(starting_patient, starting_patient+num_patients):
             # Load segmentation and volume
-            vol = self.load_segmentation(i)
+            vol = self.load_volume(i)
             vol = vol.get_data()
 
             # Convert to a visual format
             vol_ims = self.hu_to_grayscale(vol)
 
             for j in range(vol_ims.shape[0]):
-                file_path = image_path / ("{}_{:05d}.png".format(i, j))
+                file_path = image_path / ("{:05d}_{:03d}.png".format(i, j))
                 scipy.misc.imsave(str(file_path), vol_ims[j])

@@ -1,9 +1,12 @@
 import argparse
-from Keras.utils import get_task_parameters, plot_pair, plot_triplet
-from Keras.models import get_unet, plot_history, save_model, save_step_prediction, load_saved_model
-from Keras.dataloader import DataLoader
+from keras_utils import get_task_parameters, plot_pair, plot_triplet
+from keras_models import get_unet, plot_history, save_model, save_step_prediction, load_saved_model
+from keras_dataloader import DataLoader, MyPredictionGenerator
 import os
-from Keras.data_processing import PreProcessing
+from data_processing import PreProcessing
+import numpy as np
+import nibabel as nib
+from skimage.transform import resize
 import tensorflow as tf
 # tf.config.gpu.set_per_process_memory_fraction(.6)
 # tf.config.gpu.set_per_process_memory_growth(True)
@@ -83,10 +86,33 @@ class Simulation:
     def preprocess_data(self):
         preprocessing_obj = PreProcessing(source=self.preprocess_parameters['source'],
                                           destination=self.preprocess_parameters['destination'])
-        preprocessing_obj.preprocess(self.preprocess_parameters['num_cases'],self.preprocess_parameters.get('starting_patient', 0))
+        if (self.preprocess_parameters.get('predict')):
+            preprocessing_obj.preproess(self.preprocess_parameters['num_cases'],
+                                         self.preprocess_parameters.get('starting_patient', 0))
+        else:
+            preprocessing_obj.preprocess_predictions(self.preprocess_parameters['num_cases'],
+                                         self.preprocess_parameters.get('starting_patient', 0))
+
 
     def postprocess_data(self):
-        pass
+        if self.postprocess_parameters.get('use_model'):
+            self.model = self.get_model(self.postprocess_parameters)
+        prediction_generator= MyPredictionGenerator(self.postprocess_parameters, len=(self.postprocess_parameters['end_pred'] - self.postprocess_parameters['start_pred'] +1))
+        for i in range(self.postprocess_parameters['start_pred'],self.postprocess_parameters['end_pred']):
+            test_batch, original_shape = prediction_generator.__getitem__(i)
+            predictions = self.model.predict_on_batch(test_batch)
+            output_predictions = []
+            for prediction in predictions:
+                prediction = resize(prediction, (original_shape[0], original_shape[1]))
+                output_predictions.append(np.argmax(prediction, axis=2))
+            output_predictions = np.array(output_predictions)
+            affine = np.array([[ 0., 0., -0.78162497, 0.],
+                                [0., -0.78162497, 0., 0.],
+                                [-3., 0., 0., 0.],
+                                [ 0., 0., 0. , 1.]])
+            img = nib.Nifti1Image(output_predictions, affine)
+            prediction_path = os.path.join(os.getcwd(), os.path.join(self.postprocess_parameters['data_path'], 'predictions'))
+            img.to_filename(os.path.join(prediction_path, 'prediction_'+str(i).zfill(5)+'.nii.gz'))
 
     def separate_parameters(self, task_parameters):
         if task_parameters.get('train_parameters'):
@@ -111,7 +137,7 @@ class Simulation:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--task", type=str, default="1e",
+    parser.add_argument("-t", "--task", type=str, default="1f",
                         help="Please enter tasks' numbers in a string separated by comma")
 
     args = parser.parse_args()

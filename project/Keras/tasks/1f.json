@@ -1,0 +1,17 @@
+{
+    "preprocess_data": {
+    "source": "/dl_data/raw/",
+    "destination": "/dl_data/",
+    "num_cases": 2,
+    "starting_patient": 210
+  },
+  "postprocess_data": {
+    "loss": "competition_dice_loss",
+    "metrics": ["competition_dice_coef", "dice_coef", "precision", "recall"],
+    "use_model": "1d.h5",
+    "start_pred": 210,
+    "end_pred": 211,
+    "data_path": "/dl_data/",
+    "input_shape": [240, 240, 1]
+  }
+}

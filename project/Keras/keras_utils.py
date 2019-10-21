@@ -19,28 +19,29 @@ def fix_rescale(rescale_str):
 
 
 def process_task_parameters(task_parameters):
-    if task_parameters.get('train_parameters'):
-        train_parameters = task_parameters['train_parameters']
-    
+    for key in task_parameters:
+        parameters = task_parameters[key]
         str_func_dict = {'dice_coef': dice_coef, 'precision': precision, 'recall': recall, 'f1': f1, 'RMSprop': RMSprop,
                          'SGD': SGD, 'Adam': Adam, 'dice_loss': dice_coef_loss, 'weighted_loss': weighted_loss,
                          'competition_dice_coef': competition_dice_coef, 'competition_dice_loss': competition_dice_loss}
-        if train_parameters['optimizer'] in str_func_dict:
-            train_parameters['optimizer'] = str_func_dict[train_parameters['optimizer']]
+        if parameters.get('optimizer') and  parameters['optimizer'] in str_func_dict:
+            parameters['optimizer'] = str_func_dict[parameters['optimizer']]
     
-        train_parameters['metrics_func'] = []
-        for i, metric in enumerate(train_parameters['metrics']):
-            if metric in str_func_dict:
-                train_parameters['metrics_func'].append(str_func_dict[metric])
-            else:
-                train_parameters['metrics_func'].append(metric)
+        parameters['metrics_func'] = []
+        if parameters.get('metrics'):
+            for i, metric in enumerate(parameters.get('metrics')):
+                if metric in str_func_dict:
+                    parameters['metrics_func'].append(str_func_dict[metric])
+                else:
+                    parameters['metrics_func'].append(metric)
     
-        if train_parameters['loss'] in str_func_dict:
-            train_parameters['loss_func'] = str_func_dict[train_parameters['loss']]
+        if parameters.get('loss') and parameters['loss'] in str_func_dict:
+            parameters['loss_func'] = str_func_dict[parameters['loss']]
     
-        if train_parameters.get('generator') and train_parameters['generator'].get('rescale'):
-            train_parameters['generator']['rescale'] = fix_rescale(train_parameters['generator']['rescale'])
-        task_parameters['train_parameters'] = train_parameters
+        if parameters.get('generator') and parameters['generator'].get('rescale'):
+            parameters['generator']['rescale'] = fix_rescale(parameters['generator']['rescale'])
+        task_parameters[key] = parameters
+
     return task_parameters
 
 
