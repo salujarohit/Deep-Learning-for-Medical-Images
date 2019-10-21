@@ -25,7 +25,7 @@ def process_task_parameters(task_parameters):
         parameters = task_parameters[key]
         str_func_dict = {'dice_coef': dice_coef, 'precision': precision, 'recall': recall, 'f1': f1, 'RMSprop': RMSprop,
                          'SGD': SGD, 'Adam': Adam, 'dice_loss': dice_coef_loss, 'weighted_loss': weighted_loss,
-                         'competition_dice_coef': competition_dice_coef, 'competition_coef': competition_coef, 'competition_dice_loss': competition_dice_loss}
+                         'competition_coef0': competition_coef0, 'competition_coef': competition_coef, 'competition_loss': competition_loss}
         if parameters.get('optimizer') and  parameters['optimizer'] in str_func_dict:
             parameters['optimizer'] = str_func_dict[parameters['optimizer']]
     
@@ -71,11 +71,11 @@ def dice_coef(y_true, y_pred, smooth=1):
     return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
 
 
-def competition_dice_loss(y_true, y_pred):
-    return 1-competition_dice_coef(y_true, y_pred)
+def competition_loss(y_true, y_pred):
+    return 1-competition_coef(y_true, y_pred)
 
 
-def competition_coef(y_true, y_pred, smooth=1):
+def competition_coef0(y_true, y_pred, smooth=1):
     y_pred = K.argmax(y_pred, axis=-1)
     y_true = K.argmax(y_true, axis=-1)
     # try:
@@ -102,7 +102,7 @@ def competition_coef(y_true, y_pred, smooth=1):
     return (tk_dice+tu_dice) / 2.0
 
 
-def competition_dice_coef(y_true, y_pred, smooth=1):
+def competition_coef(y_true, y_pred, smooth=1):
     # try:
     # Compute tumor+kidney Dice
     tk_pd = K.flatten(y_pred[:,:,:,1:3])
