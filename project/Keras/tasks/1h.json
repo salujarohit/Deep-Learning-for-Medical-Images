@@ -7,7 +7,7 @@
     "dropout": 0.5,
     "optimizer": "Adam",
     "loss": "competition_dice_loss",
-    "metrics": ["competition_dice_coef", "competition_dice_coef1", "dice_coef"],
+    "metrics": ["competition_dice_coef", "competition_coef", "dice_coef"],
     "model": "unet",
     "base": 16,
     "input_shape": [240, 240, 1],
