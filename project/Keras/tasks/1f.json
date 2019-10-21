@@ -1,5 +1,6 @@
 {
     "preprocess_data": {
+    "predict": true,
     "source": "/dl_data/raw/",
     "destination": "/dl_data/",
     "num_cases": 2,

@@ -1,5 +1,5 @@
 import argparse
-from keras_utils import get_task_parameters, plot_pair, plot_triplet, resize_segmentation, resize_multichannel_image
+from keras_utils import get_task_parameters, plot_pair, plot_triplet
 from keras_models import get_unet, plot_history, save_model, save_step_prediction, load_saved_model
 from keras_dataloader import DataLoader, MyPredictionGenerator
 import os
@@ -87,11 +87,11 @@ class Simulation:
         preprocessing_obj = PreProcessing(source=self.preprocess_parameters['source'],
                                           destination=self.preprocess_parameters['destination'])
         if (self.preprocess_parameters.get('predict')):
-            preprocessing_obj.preproess(self.preprocess_parameters['num_cases'],
-                                         self.preprocess_parameters.get('starting_patient', 0))
-        else:
             preprocessing_obj.preprocess_predictions(self.preprocess_parameters['num_cases'],
-                                         self.preprocess_parameters.get('starting_patient', 0))
+                                                     self.preprocess_parameters.get('starting_patient', 0))
+        else:
+            preprocessing_obj.preprocess(self.preprocess_parameters['num_cases'],
+                                        self.preprocess_parameters.get('starting_patient', 0))
 
 
     def postprocess_data(self):
@@ -103,12 +103,11 @@ class Simulation:
             predictions = self.model.predict_on_batch(test_batch)
             output_predictions = []
             for prediction in predictions:
-                prediction = np.argmax(prediction, axis=2)
-                prediction = resize_segmentation(prediction,original_shape,order=1)
-                output_predictions.append(prediction)
+                prediction = resize(prediction, (original_shape[0], original_shape[1]))
+                output_predictions.append(np.argmax(prediction, axis=2))
             output_predictions = np.array(output_predictions)
-            affine = np.array([[ 0., 0., -0.78162497, 0.],
-                                [0., -0.78162497, 0., 0.],
+            affine = np.array([[ 0., 0., -0.781624972820282, 0.],
+                                [0., -0.781624972820282, 0., 0.],
                                 [-3., 0., 0., 0.],
                                 [ 0., 0., 0. , 1.]])
             img = nib.Nifti1Image(output_predictions, affine)
@@ -138,7 +137,7 @@ class Simulation:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--task", type=str, default="1f",
+    parser.add_argument("-t", "--task", type=str, default="0",
                         help="Please enter tasks' numbers in a string separated by comma")
 
     args = parser.parse_args()

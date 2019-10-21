@@ -2,7 +2,7 @@
   "preprocess_data": {
     "source": "/dl_data/raw/",
     "destination": "/dl_data/",
-    "num_cases": 110,
-    "starting_patient": 100
+    "num_cases": 1,
+    "starting_patient": 0
   }
 }
