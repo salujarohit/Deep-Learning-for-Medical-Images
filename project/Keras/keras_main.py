@@ -30,7 +30,7 @@ class Simulation:
 
     def preprocess_data(self):
         preprocessing_obj = PreProcessing(source=self.preprocess_parameters['source'],
-                                          destination=self.preprocess_parameters['destination'])
+                                          destination=self.preprocess_parameters['destination'], resize_shape=self.preprocess_parameters['resize_shape'])
 
         if self.preprocess_parameters.get('train'):
             preprocessing_obj.preprocess(self.preprocess_parameters['num_cases'],

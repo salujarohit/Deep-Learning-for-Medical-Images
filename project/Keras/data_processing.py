@@ -3,14 +3,15 @@ import scipy.misc
 import numpy as np
 import os
 import nibabel as nib
-
+from skimage.transform import resize
 
 class PreProcessing:
-    def __init__(self, hu_min=-512, hu_max=512, source=None, destination=None):
+    def __init__(self, hu_min=-512, hu_max=512, source=None, destination=None, resize_shape=(240, 240)):
         self.hu_min = hu_min
         self.hu_max = hu_max
         self.source = source
         self.destination = destination
+        self.resize_shape = (resize_shape[0],resize_shape[1])
 
     def set_source(self, source):
         self.source = source
@@ -89,9 +90,13 @@ class PreProcessing:
                 #extracting only images that have tumor
                 if np.max(seg[j]) == 2: #np.max(seg[j]) != 0:
                     file_path = image_path / ("{}_{:05d}.png".format(i, j))
-                    scipy.misc.imsave(str(file_path), vol_ims[j])
+                    image = resize(vol_ims[j], self.resize_shape)
+                    scipy.misc.imsave(str(file_path), image)
                     file_path = mask_path / ("{}_{:05d}.png".format(i, j))
-                    scipy.misc.imsave(str(file_path), seg[j])
+                    mask = resize(seg[j], self.resize_shape,
+                           order=0, anti_aliasing=False,
+                           preserve_range=True)
+                    scipy.misc.imsave(str(file_path), mask)
 
     def preprocess_predictions(self,num_patients, starting_patient):
         if self.source is None and self.destination is None:

@@ -2,6 +2,7 @@
   "preprocess_data": {
     "source": "/dl_data/raw/",
     "destination": "/dl_data/",
+    "resize_shape": [240,240],
     "train": true,
     "num_cases": 3,
     "starting_patient": 4,
