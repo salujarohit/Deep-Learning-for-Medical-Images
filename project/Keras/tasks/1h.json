@@ -1,0 +1,21 @@
+{
+  "train_parameters": {
+    "lr": 0.0001,
+    "batch_size": 8,
+    "epochs": 100,
+    "batch_norm": true,
+    "dropout": 0.5,
+    "optimizer": "Adam",
+    "loss": "competition_loss",
+    "metrics": ["competition_coef", "competition_coef0", "dice_coef"],
+    "model": "unet",
+    "base": 16,
+    "input_shape": [240, 240, 1],
+    "data_path": "/dl_data/",
+    "test_size": 0.2,
+    "last_layer_units": 3,
+    "last_layer_activation": "softmax",
+    "save_model": true,
+    "shuffle": true
+  }
+}
