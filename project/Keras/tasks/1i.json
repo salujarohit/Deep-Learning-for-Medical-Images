@@ -2,18 +2,22 @@
   "preprocess_data": {
     "source": "/dl_data/raw/",
     "destination": "/dl_data/",
-    "num_cases": 210,
-    "starting_patient": 0
+    "train": true,
+    "num_cases": 3,
+    "starting_patient": 4,
+    "predict": true,
+    "num_cases_prediction": 2,
+    "starting_patient_prediction": 210
   },
   "train_parameters": {
     "lr": 0.0001,
     "batch_size": 8,
-    "epochs": 50,
+    "epochs": 2,
     "batch_norm": true,
     "dropout": 0.5,
     "optimizer": "Adam",
     "loss": "competition_loss",
-    "metrics": ["competition_coef", "competition_coef0", "dice_coef"],
+    "metrics": ["competition_coef", "custom_competition_coef", "dice_coef", "precision", "recall"],
     "model": "unet",
     "base": 16,
     "input_shape": [240, 240, 1],
@@ -23,5 +27,11 @@
     "last_layer_activation": "softmax",
     "save_model": true,
     "shuffle": true
+  },
+   "postprocess_data": {
+    "start_pred": 210,
+    "num_cases": 2,
+    "data_path": "/dl_data/",
+    "input_shape": [240, 240, 1]
   }
 }

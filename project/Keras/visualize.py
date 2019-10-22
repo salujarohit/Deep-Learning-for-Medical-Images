@@ -1,3 +1,4 @@
+#This file is taken from starter_code of the competition
 from pathlib import Path
 import argparse
 
