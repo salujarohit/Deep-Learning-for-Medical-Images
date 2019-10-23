@@ -1,6 +1,6 @@
-## This repository shows a segmentation pipeline as a project for 'Deep Learning for Medical Images' course.
+## This repository shows a segmentation pipeline developed for the project in the 'Deep Learning for Medical Images' course.
  
-##### Pipeline meant to help deep learning researcher to run different experiments easily by changing configureation file and run one command for the whole pipeline.   
+##### Pipeline is meant to help deep learning researchers in running different experiments easily by changing configureation file and running one command for the whole pipeline.   
 
 ##### We needed this pipeline to apply it on KiTS19 competition https://kits19.grand-challenge.org/home/ 
 

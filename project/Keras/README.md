@@ -42,4 +42,4 @@ Inside this file you can have one or more of next three elements:
     - "data_path": string, data path for source data files for prediction (e.g. "/dl_data/")
     - "input_shape": list, showing required shape for model input (e.g. [240, 240, 1])
     
-### For an example, please check tasks/test_example.json
+#### For an example, please check tasks/test_example.json
