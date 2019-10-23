@@ -8,7 +8,8 @@ from sklearn.model_selection import train_test_split
 import SimpleITK as sitk
 from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms.functional as TF
-
+import torch
+from PIL import Image
 
 class MyDataset(Dataset):
     def __init__(self, image_names, mask_names, hyperparameters, step_num, fold_num, generator_type, transform=None):
@@ -41,40 +42,12 @@ class MyDataset(Dataset):
     def normalize(self,image):
         pass
 
-    # @staticmethod
-    # def load_step_prediction(s_step, fold_num, fold_len, idx, batch_size, generator_type, data_shape):
-    #     save_path = os.path.join(os.getcwd(), 'models')
-    #     if os.path.isfile(os.path.join(save_path, 'posterior_unet_step' + str(s_step - 1) + '.npy')):
-    #         predictions = np.load(os.path.join(save_path, 'posterior_unet_step' + str(s_step - 1) + '.npy'),
-    #                               allow_pickle=True)
-    #         output_pred = np.zeros(data_shape)
-    #         if generator_type == "testing":
-    #             upper_limit = min((fold_num * fold_len) + ((idx + 1) * batch_size), ((fold_num + 1) * fold_len))
-    #             output_indices = list(np.arange((fold_num * fold_len) + (idx * batch_size), upper_limit))
-    #         else:
-    #             test_indices = list(np.arange((fold_num * fold_len), ((fold_num + 1) * fold_len)))
-    #             all_indices = list(np.arange(len(predictions)))
-    #             train_indices = list(set(all_indices) - set(test_indices))
-    #             output_indices = train_indices[idx * batch_size:(idx + 1) * batch_size]
-    #         for i, ind in enumerate(output_indices):
-    #             output_pred[i] = predictions[ind]
-    #     else:
-    #         output_pred = np.full(data_shape, .5)
-    #     return output_pred
-
     def get_x(self, idx):
-        x = self.image_filenames[idx]
-        x = np.array(resize(imread(x), (self.hyperparameters['input_shape'][0], self.hyperparameters['input_shape'][0])))
+        x = imread(self.image_filenames[idx], as_gray=False)
+        x = np.array(resize(x, (self.hyperparameters['input_shape'][0], self.hyperparameters['input_shape'][0])))
 
         if self.hyperparameters['input_shape'][2] == 1:
             x = np.expand_dims(x, axis=3)
-
-        # if self.hyperparameters.get('autocontext_step'):
-        #     self.hyperparameters['fold_len'] = len(self.image_filenames) // self.hyperparameters['folds']
-        #     last_step_pred = self.load_step_prediction(self.step_num,
-        #                                                self.fold_num, self.hyperparameters['fold_len'],
-        #                                                idx, self.hyperparameters['batch_size'], self.generator_type, x.shape)
-        #     x = np.concatenate((x, last_step_pred), axis=-1)
 
         return x
 
@@ -123,11 +96,14 @@ class MyDataset(Dataset):
         # if random.random() > 0.5:
         #     x = TF.vflip(x)
         #     y = TF.vflip(y)
+        x = x.transpose((2, 0, 1))
+        x = torch.from_numpy(x)
+        y = y.transpose((2, 0, 1))
+        y = torch.from_numpy(y)
 
-        x = TF.to_tensor(y)
-        y = TF.to_tensor(y)
         if z:
-            z = TF.to_tensor(z)
+            z = z.transpose((2, 0, 1))
+            z = torch.from_numpy(z)
             return x, y, z
         else:
             return x, y

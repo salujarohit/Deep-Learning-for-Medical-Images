@@ -25,13 +25,14 @@ class Simulation:
     def normal_train(self):
         losses = []
         val_losses = []
-        self.model = self.get_model(self.hyperparameters).to(self.device)
+        self.model = self.get_model(self.hyperparameters).to(self.device).double()
+
         criterion = self.hyperparameters['loss']
-        optimizer = self.hyperparameters['optimizer'](self.model.parameters(), lr=self.hyperparameters['lr'])#, momentum=0.9)
-        for epoch in range(self.hyperparameters['epochs']):  # loop over the dataset multiple times
+        optimizer = self.hyperparameters['optimizer'](self.model.parameters(), lr=self.hyperparameters['lr'])
+        for epoch in range(self.hyperparameters['epochs']):
             training_generator, validation_generator = self.data_loader.get_generators()
             running_loss = 0.0
-            val_running_loss = 0.0
+            counter = 0.0
             for i, data in enumerate(training_generator, 0):
                 # get the inputs; data is a list of [inputs, labels]
                 if self.hyperparameters.get('use_weight_maps'):
@@ -40,6 +41,7 @@ class Simulation:
                     inputs, labels = data
                 inputs = inputs.to(self.device)
                 labels = labels.to(self.device)
+                print("training")
                 self.model.train()
                 # zero the parameter gradients
                 optimizer.zero_grad()
@@ -47,78 +49,33 @@ class Simulation:
                 # forward + backward + optimize
                 outputs = self.model(inputs)
                 loss = criterion(outputs, labels)
-                losses.append(loss.item())
+                running_loss += loss.item()
+
                 loss.backward()
                 optimizer.step()
+                print("testing")
+                counter += 1
+            losses.append(running_loss / counter)
+            with torch.no_grad():
+                val_running_loss = 0.0
+                val_counter = 0.0
+                for x_val, y_val in validation_generator:
+                    x_val = x_val.to(self.device)
+                    y_val = y_val.to(self.device)
 
-                with torch.no_grad():
-                    for x_val, y_val in validation_generator:
-                        x_val = x_val.to(self.device)
-                        y_val = y_val.to(self.device)
+                    self.model.eval()
 
-                        self.model.eval()
-
-                        yhat = self.model(x_val)
-                        val_loss = criterion(y_val, yhat)
-                        val_losses.append(val_loss.item())
-
-                # print statistics
-                running_loss += loss.item()
-                val_running_loss += val_loss.item()
-                if i % 2000 == 1999:  # print every 2000 mini-batches
-                    print('[%d, %5d] loss: %.3f val_loss: %.3f' %
-                          (epoch + 1, i + 1, running_loss / 2000, val_running_loss / 2000))
-                    running_loss = 0.0
-                    val_running_loss = 0.0
+                    yhat = self.model(x_val)
+                    val_loss = criterion(y_val, yhat)
+                    val_running_loss += val_loss.item()
+                    val_counter += 1
+            val_losses.append(val_running_loss / val_counter)
 
         print('Finished Training')
-
-        # for batch_x, batch_y in training_generator:
-        #     plot_pair(batch_x[0,:,:,0], batch_y[0,:,:,0])
-        #     plot_pair(batch_x[0, :, :, 0], batch_y[0, :, :, 1])
-        #     plot_pair(batch_x[0, :, :, 0], batch_y[0, :, :, 2])
-        plot_loss(self.current_task, losses, val_loss)
-        # if self.hyperparameters.get('save_model'):
-        #     save_model(self.model, self.current_task)
-
-    # def kfold_train(self, step_num=None):
-    #     for fold_num in range(self.hyperparameters['folds']):
-    #         training_generator, validation_generator = self.data_loader.get_generators(fold_num=fold_num, step_num=step_num)
-    #         self.model = self.get_model(self.hyperparameters)
-    #         model_history = self.model.fit_generator(training_generator,
-    #                                                  epochs=self.hyperparameters['epochs'],
-    #                                                  validation_data=validation_generator)
-    #         plot_history(self.hyperparameters, model_history, self.current_task, step_num=step_num, fold_num=fold_num)
-    #         if self.hyperparameters.get('save_model'):
-    #             save_model(self.model, self.current_task, step_num=step_num, fold_num=fold_num)
-
-    # def autcontext_train(self):
-    #     autocontext_step = self.hyperparameters['autocontext_step']
-    #     model_predictions = [None] * len(
-    #         os.listdir(os.path.join(os.getcwd(), os.path.join(self.hyperparameters['data_path'], 'Image'))))
-    #     for step_num in range(0, autocontext_step):
-    #         for fold_num in range(self.hyperparameters['folds']):
-    #             training_generator, validation_generator = self.data_loader.get_generators(fold_num, step_num)
-    #             self.model = self.get_model(self.hyperparameters)
-    #             model_history = self.model.fit_generator(training_generator,
-    #                                                 epochs=self.hyperparameters['epochs'],
-    #                                                 validation_data=validation_generator)
-    #             plot_history(self.hyperparameters, model_history, self.current_task, step_num, fold_num)
-    #             if self.hyperparameters.get('save_model'):
-    #                 save_model(self.model, self.current_task, step_num, fold_num)
-    #
-    #             y_pred = self.model.predict(validation_generator)
-    #             total_val = len(validation_generator.image_filenames)
-    #             model_predictions[(fold_num * total_val):((fold_num + 1) * total_val)] = y_pred
-    #         save_step_prediction(model_predictions, step_num)
+        plot_loss(self.current_task, losses, val_losses)
 
     def run_task(self):
         self.data_loader = self.get_dataloader(self.hyperparameters)
-        # if self.hyperparameters.get('autocontext_step'):
-        #     self.autcontext_train()
-        # elif self.hyperparameters.get('folds'):
-        #     self.kfold_train()
-        # else:
         self.normal_train()
 
     def preprocess_data(self):
@@ -152,7 +109,7 @@ class Simulation:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--task", type=str, default="1a",
+    parser.add_argument("-t", "--task", type=str, default="1b",
                         help="Please enter tasks' numbers in a string separated by comma")
 
     args = parser.parse_args()

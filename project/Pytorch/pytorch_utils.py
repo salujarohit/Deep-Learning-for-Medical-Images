@@ -23,7 +23,7 @@ def process_task_parameters(task_parameters):
     
         str_func_dict = {'dice_coef': dice_coef, 'precision': precision, 'recall': recall, 'f1': f1,
                          'SGD': optim.SGD, 'Adam': optim.Adam, 'dice_loss': dice_coef_loss, 'weighted_loss': weighted_loss,
-                         'competition_dice_coef': competition_dice_coef, 'competition_dice_loss': competition_dice_loss, 'cross_entopy': nn.CrossEntropyLoss()}
+                         'competition_dice_coef': competition_dice_coef, 'competition_dice_loss': competition_dice_loss, 'cross_entopy': nn.CrossEntropyLoss}
         if train_parameters['optimizer'] in str_func_dict:
             train_parameters['optimizer'] = str_func_dict[train_parameters['optimizer']]
     

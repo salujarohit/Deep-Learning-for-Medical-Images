@@ -66,7 +66,7 @@ class UNet(nn.Module):
         dec1 = self.upconv1(dec2)
         dec1 = torch.cat((dec1, enc1), dim=1)
         dec1 = self.decoder1(dec1)
-        return self.out_activation(self.conv(dec1))
+        return self.out_activation(self.conv(dec1), dim=1)
 
     @staticmethod
     def _block(in_channels, features, name):
@@ -128,6 +128,7 @@ def plot_loss(task_number, training_loss, val_loss, step_num=None, fold_num=None
 
     fig = plt.figure(figsize=(4, 4))
     plt.title("Learning Curve")
+    x_axis_len = len(training_loss)
     plt.plot(training_loss, label="loss")
     plt.plot(val_loss, label="val_loss")
     plt.plot(np.argmin(val_loss),

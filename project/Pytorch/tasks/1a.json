@@ -1,8 +1,8 @@
 {
   "train_parameters": {
-    "lr": 0.00001,
+    "lr": 0.0001,
     "batch_size": 8,
-    "epochs": 100,
+    "epochs": 50,
     "batch_norm": true,
     "dropout": 0.5,
     "optimizer": "Adam",
