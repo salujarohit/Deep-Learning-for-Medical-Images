@@ -1,5 +1,5 @@
 ### For experiments: 
-Create a json configuration file inside "tasks" folder.
+Created a json configuration file inside "tasks" folder.
 Inside this file you can have one or more of next three elements:
  
 - preprocess_data: which is responsible for reading .nii.gz data files and separate them into /data_path/Image & /data_path/Mask
