@@ -27,7 +27,10 @@ Inside this file you can have one or more of next three elements:
     - "base": Integer, number of features used for the first layer in U-net and then multiplies by 2 for next layers (e.g.16)
     - "input_shape": list, showing required shape for model input (e.g. [240, 240, 1])
     - "data_path": string, data path for source data files (e.g. "/dl_data/")
-    - "test_size": float, showing percentage of size of data used for validation (e.g. 0.2)
+    - "test_size": float, showing percentage of size of data used for validation (e.g. 0.2), shouldn't be used when "folds" is used.
+    - "folsds": Integer, showing how many folds to be used when applying kfold technique, shouldn't be used when "test_size" is used. 
+    - "use_weight_maps": bool, whether to use weight maps or not, default false.
+    - "autocontext_step": Integer, showing how many steps to be used for autocontext. If it is mentioned, autocontext will be used. 
     - "last_layer_units": Integer, number of units used for last layer (number of classes when softmax used as activation or 1 when when sigmoid used as activation)
     - "last_layer_activation": String, used for last layer activation (e.g. "softmax")
     - "save_model": boolean, whether to save the model or not
