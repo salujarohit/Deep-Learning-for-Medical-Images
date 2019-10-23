@@ -41,7 +41,7 @@ class Simulation:
                     inputs, labels = data
                 inputs = inputs.to(self.device)
                 labels = labels.to(self.device)
-                print("training")
+
                 self.model.train()
                 # zero the parameter gradients
                 optimizer.zero_grad()
@@ -53,7 +53,7 @@ class Simulation:
 
                 loss.backward()
                 optimizer.step()
-                print("testing")
+
                 counter += 1
             losses.append(running_loss / counter)
             with torch.no_grad():
@@ -70,7 +70,7 @@ class Simulation:
                     val_running_loss += val_loss.item()
                     val_counter += 1
             val_losses.append(val_running_loss / val_counter)
-
+            print('epoch {}/{}, loss:{}, val_loss:{}'.format(epoch,self.hyperparameters['epochs'],running_loss / counter, val_running_loss / val_counter))
         print('Finished Training')
         plot_loss(self.current_task, losses, val_losses)
 
