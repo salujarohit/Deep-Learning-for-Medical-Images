@@ -25,7 +25,9 @@ def process_task_parameters(task_parameters):
         parameters = task_parameters[key]
         str_func_dict = {'dice_coef': dice_coef, 'precision': precision, 'recall': recall, 'f1': f1, 'RMSprop': RMSprop,
                          'SGD': SGD, 'Adam': Adam, 'dice_loss': dice_coef_loss, 'weighted_loss': weighted_loss,
-                         'competition_coef': competition_coef, 'custom_competition_coef': custom_competition_coef, 'competition_loss': competition_loss}
+                         'competition_coef': competition_coef, 'custom_competition_coef': custom_competition_coef,
+                         'competition_loss': competition_loss, 'weighted_competition_coef':weighted_competition_coef,
+                         "weighted_competition_loss": weighted_competition_loss}
         if parameters.get('optimizer') and  parameters['optimizer'] in str_func_dict:
             parameters['optimizer'] = str_func_dict[parameters['optimizer']]
     
@@ -126,6 +128,34 @@ def custom_competition_coef(y_true, y_pred, smooth=1):
     #     return tk_dice / 2.0
     return (tk_dice+tu_dice) / 2.0
 
+
+def weighted_competition_loss(y_true, y_pred):
+    return 1-weighted_competition_coef(y_true, y_pred)
+
+
+def weighted_competition_coef(y_true, y_pred, smooth=1):
+    # try:
+    # Compute tumor+kidney Dice
+    tk_pd = K.flatten(y_pred[:,:,:,1:3])
+    tk_gt = K.flatten(y_true[:,:,:,1:3])
+    intersection = K.sum(K.abs(tk_gt * tk_pd))
+    tk_dice = (2. * intersection + smooth) / (
+            K.sum(tk_pd) + K.sum(tk_gt) + smooth
+    )
+    # except ZeroDivisionError:
+    #     return 0
+
+    # try:
+        # Compute tumor Dice
+    tu_pd = K.flatten(y_pred[:,:,:,2:3])
+    tu_gt = K.flatten(y_true[:,:,:,2:3])
+    intersection = K.sum(K.abs(tu_gt * tu_pd))
+    tu_dice = (2. * intersection + smooth) / (
+            K.sum(tu_pd) + K.sum(tu_gt) + smooth
+    )
+    # except ZeroDivisionError:
+    #     return tk_dice / 2.0
+    return (.3 * tk_dice) + (.7 * tu_dice)
 
 def recall(y_true, y_pred):
     y_true_f = K.flatten(y_true)
