@@ -18,7 +18,7 @@
     "dropout": 0.5,
     "optimizer": "Adam",
     "loss": "competition_loss",
-    "metrics": ["competition_coef", "custom_competition_coef", "dice_coef", "precision", "recall"],
+    "metrics": ["custom_competition_coef", "competition_coef", "dice_coef", "precision", "recall"],
     "model": "unet",
     "base": 16,
     "input_shape": [240, 240, 1],

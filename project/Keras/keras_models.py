@@ -177,9 +177,9 @@ class ModelContainer:
         plt.title("Metrics Curves")
         for metric in self.hyperparameters['metrics']:
             for key in self.model_history.history:
-                if "val" not in key and metric == key:
+                if "val" not in key and metric in key:
                     metric_key = key
-                if "val" in key and metric == key:
+                if "val" in key and metric in key:
                     metric_val_key = key
             if metric_key != '' and metric_val_key != '':
                 plt.plot(self.model_history.history[metric_key], label=metric_key)

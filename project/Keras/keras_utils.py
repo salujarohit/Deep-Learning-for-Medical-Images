@@ -155,7 +155,7 @@ def weighted_competition_coef(y_true, y_pred, smooth=1):
     )
     # except ZeroDivisionError:
     #     return tk_dice / 2.0
-    return (.3 * tk_dice) + (.7 * tu_dice)
+    return (.1 * tk_dice) + (.9 * tu_dice)
 
 def recall(y_true, y_pred):
     y_true_f = K.flatten(y_true)
